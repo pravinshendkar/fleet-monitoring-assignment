@@ -8,8 +8,7 @@
 
 > [!IMPORTANT]
 > **Implementation Status Notice**:  
-> * **Design & Specification**: Fully specified, architected, and validated.
-> * **Production Status**: The 30-day retention and compaction policy is documented as the intended production strategy for mobile storage management. Automated scheduled compaction execution background tasks are documented for production deployment to prevent silent data loss during development.
+> The 30-day rolling retention policy is the proposed production policy for this take-home assignment. Automatic compaction/deletion is documented as a design specification but is **NOT implemented in the current application scope** to prevent deleting development seed data during local test sessions.
 
 ---
 
@@ -17,7 +16,7 @@
 
 In a local-first mobile fleet application managing 500 electric vehicles streaming telemetry every 10–15 seconds, raw high-frequency telemetry grows by approximately **3 to 4 million rows per day (~500 MB/day)**. Allowing local storage to grow infinitely on mobile devices would cause storage exhaustion and performance degradation.
 
-This document outlines the **30-Day Rolling Telemetry Retention Policy** for the Bytebeam Fleet Console.
+This document outlines the **30-Day Rolling Telemetry Retention Policy** designed for the Bytebeam Fleet Console.
 
 ---
 
@@ -33,9 +32,9 @@ This document outlines the **30-Day Rolling Telemetry Retention Policy** for the
 
 ---
 
-## 3. Compaction Implementation & SQL Execution
+## 3. Compaction Implementation & SQL Execution Strategy
 
-Compaction runs periodically as a background maintenance task during local database maintenance windows:
+When implemented in production, compaction would run periodically as a background maintenance task during local database maintenance windows:
 
 ```sql
 -- 1. Create hourly SOC aggregate summaries for records older than 30 days
@@ -75,4 +74,4 @@ CHECKPOINT;
 * ⚠️ Replayability of sub-minute speed spikes on historical trips older than 30 days.
 
 ### Why This Policy Is Appropriate:
-Mobile local-first storage remains strictly bounded under **~150 MB total database size** for 500 vehicles, while guaranteeing zero loss of operational fleet summary analytics, trip records, or safety alert history.
+Bounding raw telemetry retention to 30 days limits local storage growth while guaranteeing zero loss of operational fleet summary analytics, trip records, or safety alert history.

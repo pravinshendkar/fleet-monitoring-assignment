@@ -15,7 +15,7 @@
 | **Dart SDK** | `Dart 3.5.0` | `Dart 3.5.0` |
 | **Embedded Database Engine** | `dart_duckdb: ^1.2.0` (DuckDB C FFI) | `dart_duckdb: ^1.2.0` |
 | **Scale Dataset** | 500 Vehicles, 2,000,000 Telemetry Signal Rows | 500 Vehicles, 2,000,000 Telemetry Signal Rows |
-| **Cold-Start Duration** | **362 ms** | *Not Measured (See Environment Limitation)* |
+| **Cold-Start / Process Init** | **362 ms** (Dart Process + DuckDB Init + Initial Fleet Query) | *Not Measured (See Environment Limitation)* |
 | **Fleet Query p50** | **7 ms** | *Not Measured* |
 | **Fleet Query p95** | **10 ms** | *Not Measured* |
 | **Memory RSS at Rest** | **367.4 MB** | *Not Measured* |
@@ -25,10 +25,13 @@
 
 ## 2. Measured Development / Linux Reference Benchmark
 
+### Benchmark Dataset Note
+The scale benchmark intentionally generates a 2,000,000 row dataset spanning more than 30 days to stress-test DuckDB query latency at scale. This benchmark dataset is designed for performance testing and does not represent the production retained dataset.
+
 ### Methodology & Execution Procedure
-Executed using the dedicated scale benchmark suite ([bin/run_scale_benchmark.dart](file:///home/pravin/Pravin/flutter_projects/fleet_console/bin/run_scale_benchmark.dart)):
-1. **Cold Start Measurement**:
-   * Measures wall-clock duration from process start → DuckDB C engine initialization → Schema creation → First fleet summary & paginated list query painted.
+Executed using the dedicated scale benchmark script ([bin/run_scale_benchmark.dart](bin/run_scale_benchmark.dart)):
+1. **Cold Start / Process Startup Measurement**:
+   * Measures wall-clock duration: process startup → DuckDB C engine initialization → schema setup → initial fleet summary & paginated list query.
 2. **Fleet Query Latency (p50 & p95)**:
    * Populate DuckDB with 500 vehicles and 2,000,000 telemetry packets using native DuckDB bulk generation.
    * Execute 50 consecutive query iterations combining SQL live status count computation (`getFleetSummary`) and status-filtered paginated vehicle list queries (`getVehicles`).
@@ -38,7 +41,7 @@ Executed using the dedicated scale benchmark suite ([bin/run_scale_benchmark.dar
 
 ### Measured Empirical Results (Linux x86_64)
 * **Dataset Size**: 500 Vehicles, 2,000,000 Telemetry Packets
-* **Cold-Start Duration**: **362 ms**
+* **Cold Start / Process Init**: **362 ms**
 * **Bulk Dataset Ingestion**: **11,725 ms** (2,000,000 signal rows)
 * **Fleet Query Latency p50**: **7 ms**
 * **Fleet Query Latency p95**: **10 ms**

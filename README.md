@@ -29,7 +29,7 @@ DuckDB C FFI Engine (Single Source of Truth)
 
 ## 2. Core Features Overview
 
-* 🚐 **Fleet Home**: Real-time status count chips (`MOVING`, `IDLE`, `STOPPED`, `CHARGING`), vehicle search, status filtering, and SQL-paginated list rendering.
+* 🚐 **Fleet Home**: Real-time status count chips (`ALL`, `OFFLINE`, `MOVING`, `IDLE`, `STOPPED`), vehicle search, status filtering, and SQL-paginated list rendering.
 * ⚡ **Vehicle Detail**: Real-time telemetry pings, signal freshness/staleness verdicts (> 10 mins old), and chronological SOC battery history timeline.
 * ⚠️ **Alert Lifecycle**: SOC < 20% (Warning), SOC < 10% (Critical), and Temp > 45°C (Critical) alert escalation. Supports alert dismissal with mandatory reason selection, a 5-second SnackBar **UNDO** option, and resolution handling.
 * 📍 **Geofence Management**: Create, edit, and deactivate geofences. Uses Haversine distance calculations and a **2-consecutive-ping hysteresis strategy** to prevent GPS jitter from triggering false transitions.
@@ -53,7 +53,7 @@ flutter pub get
 # 2. Run static analysis (0 errors guaranteed)
 dart analyze
 
-# 3. Run full automated test suite (75 passing tests)
+# 3. Run full automated test suite (76 passing tests)
 flutter test
 
 # 4. Launch the application on Linux Desktop
@@ -70,7 +70,7 @@ dart run bin/run_scale_benchmark.dart
 Follow this step-by-step sequence when testing the application:
 
 1. **Launch App**: Open `Fleet Console`. The application bootstraps DuckDB, seeds the initial development fleet, and paints `FleetHomeView`.
-2. **View Summary Chips**: Observe the live status count chips (`ALL`, `MOVING`, `IDLE`, `STOPPED`, `CHARGING`) generated via SQL queries.
+2. **View Summary Chips**: Observe the live status count chips (`ALL`, `OFFLINE`, `MOVING`, `IDLE`, `STOPPED`) generated via SQL queries.
 3. **Filter Vehicles**: Tap the `MOVING` chip or type `EV-001` in the search bar to filter the paginated list.
 4. **Open Vehicle Detail**: Tap any vehicle card to navigate to `VehicleDetailView`.
 5. **Inspect Signals & SOC History**: View signal freshness verdicts (NORMAL/STALE) and the chronological SOC history table.
@@ -89,29 +89,34 @@ Run the full test suite using:
 flutter test
 ```
 
-**Result**: **75 / 75 tests passing** across 12 test files covering domain rules, use cases, repositories, DuckDB persistence, late-event handling, Cubit states, and Widget UI views.
+**Result**: **76 / 76 tests passing** across 12 test files covering domain rules, use cases, repositories, DuckDB persistence, late-event handling, Cubit states, and Widget UI views.
 
 ---
 
 ## 6. Performance & Scale Benchmark Summary
 
-* **Dataset Size**: **500 Electric Vehicles, 2,000,000 Telemetry Signal Rows**
-* **Cold-Start Duration**: **362 ms** (Linux x86_64 reference)
+### Measured Linux Reference Benchmark
+* **Scale Dataset**: **500 Electric Vehicles, 2,000,000 Telemetry Signal Rows**
+* **Cold Start / Process Init**: **362 ms** (Dart Process + DuckDB Init + Initial Fleet Query)
 * **Fleet Query Latency (p50)**: **7 ms**
 * **Fleet Query Latency (p95)**: **10 ms**
 * **Process Memory (RSS)**: **367.4 MB**
 
-Full empirical methodology and query index optimizations are documented in [docs/performance_benchmark.md](file:///home/pravin/Pravin/flutter_projects/fleet_console/docs/performance_benchmark.md).
+### Android Benchmark Status: Not Measured
+The Android benchmark was not performed because the execution environment lacked a connected Android device or pre-installed AVD emulator images, and upstream `dart_duckdb: ^1.2.0` Gradle scripts failed downloading prebuilt Android C binary ZIPs.
+
+Full empirical methodology and query index optimizations are documented in [docs/performance_benchmark.md](docs/performance_benchmark.md).
 
 ---
 
 ## 7. Telemetry Retention & Compaction Policy
 
 High-frequency telemetry is governed by a **30-Day Rolling Telemetry Retention Policy**:
-* Detailed sub-minute raw telemetry packets older than 30 days are compacted into hourly SOC summary points and deleted.
+* The 30-day rolling retention policy is the proposed production policy for this take-home assignment. Automatic compaction/deletion is documented as a design specification but is **NOT implemented in the current application scope** to prevent deleting development seed data during local test sessions.
+* Detailed sub-minute raw telemetry packets older than 30 days are specified for compaction into hourly SOC summary points and deletion.
 * 100% of historical completed trips, geofence transition events, alert logs, and vehicle states are preserved permanently.
 
-Full policy specification and trade-off analysis are documented in [docs/retention_policy.md](file:///home/pravin/Pravin/flutter_projects/fleet_console/docs/retention_policy.md).
+Full policy specification and trade-off analysis are documented in [docs/retention_policy.md](docs/retention_policy.md).
 
 ---
 
@@ -124,7 +129,7 @@ Full policy specification and trade-off analysis are documented in [docs/retenti
    * *Cut Decision*: Implemented coordinate/radius form inputs instead of embedding third-party Google Maps tiles.
    * *Rationale*: Avoids external API key dependencies and ensures 100% offline, reproducible testing.
 3. **Retention Compaction Deployment**:  
-   * *Cut Decision*: retention policy and compaction SQL are documented as production maintenance specifications rather than running destructive cleanup during local developer sessions.
+   * *Cut Decision*: Retention policy and compaction SQL are documented as production maintenance specifications rather than running destructive cleanup during local developer sessions.
 
 ---
 
