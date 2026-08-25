@@ -27,6 +27,7 @@ class SignalReading extends Equatable {
   String get ageString {
     if (timestamp == null) return 'Never';
     final diff = DateTime.now().difference(timestamp!);
+    if (diff.isNegative) return 'Just now';
     if (diff.inSeconds < 60) return '${diff.inSeconds}s ago';
     if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
     if (diff.inHours < 24) return '${diff.inHours}h ago';

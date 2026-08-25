@@ -229,8 +229,10 @@ class VehicleCard extends StatelessWidget {
 
   String _formatLastSeen(DateTime dt) {
     final diff = DateTime.now().difference(dt);
+    if (diff.isNegative) return 'Just now';
     if (diff.inSeconds < 60) return '${diff.inSeconds}s ago';
     if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-    return '${diff.inHours}h ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    return '${diff.inDays}d ago';
   }
 }

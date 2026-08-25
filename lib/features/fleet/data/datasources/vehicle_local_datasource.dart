@@ -22,6 +22,14 @@ class VehicleLocalDataSourceImpl implements VehicleLocalDataSource {
 
   VehicleLocalDataSourceImpl({required this.dbClient});
 
+  /// Whether a vehicle's last_seen_at is stale (> 10 minutes ago).
+  /// This is the SQL equivalent of the Dart isStale check.
+  static const _staleCondition = "last_seen_at < (now() - INTERVAL 10 MINUTE)";
+
+  /// Whether a vehicle's last_seen_at is recent (<= 10 minutes ago).
+  static const _recentCondition =
+      "last_seen_at >= (now() - INTERVAL 10 MINUTE)";
+
   @override
   Future<List<VehicleModel>> getVehicles({
     VehicleStatus? statusFilter,
@@ -32,13 +40,14 @@ class VehicleLocalDataSourceImpl implements VehicleLocalDataSource {
   }) async {
     var conditions = <String>[];
 
+    // Status filtering uses the same business rule as Vehicle.calculateStatus():
+    // - OFFLINE: last_seen_at > 10 minutes ago (stale)
+    // - MOVING/IDLE/STOPPED: stored status AND last_seen_at <= 10 minutes ago
     if (statusFilter != null) {
       if (statusFilter == VehicleStatus.offline) {
-        conditions.add("last_seen_at < (now() - INTERVAL 10 MINUTE)");
+        conditions.add("($_staleCondition)");
       } else {
-        conditions.add(
-          "status = '${statusFilter.name}' AND last_seen_at >= (now() - INTERVAL 10 MINUTE)",
-        );
+        conditions.add("status = '${statusFilter.name}' AND $_recentCondition");
       }
     }
 
@@ -49,7 +58,8 @@ class VehicleLocalDataSourceImpl implements VehicleLocalDataSource {
     if (searchQuery != null && searchQuery.isNotEmpty) {
       final cleanQuery = searchQuery.replaceAll("'", "''");
       conditions.add(
-        "(vehicle_id LIKE '%$cleanQuery%' OR name LIKE '%$cleanQuery%')",
+        "(LOWER(vehicle_id) LIKE LOWER('%$cleanQuery%') "
+        "OR LOWER(name) LIKE LOWER('%$cleanQuery%'))",
       );
     }
 
@@ -80,13 +90,17 @@ class VehicleLocalDataSourceImpl implements VehicleLocalDataSource {
 
   @override
   Future<FleetSummary> getFleetSummary() async {
-    final sql = '''
+    // Uses the same business rule as Vehicle.calculateStatus():
+    // - If last_seen_at > 10 minutes ago → OFFLINE (regardless of stored status)
+    // - Else → use the stored status (which was set by Vehicle.calculateStatus() at ingest)
+    final sql =
+        '''
       SELECT
         COUNT(*) as total_vehicles,
-        SUM(CASE WHEN last_seen_at >= (now() - INTERVAL 10 MINUTE) AND status = 'moving' THEN 1 ELSE 0 END) as moving_count,
-        SUM(CASE WHEN last_seen_at >= (now() - INTERVAL 10 MINUTE) AND status = 'idle' THEN 1 ELSE 0 END) as idle_count,
-        SUM(CASE WHEN last_seen_at >= (now() - INTERVAL 10 MINUTE) AND status = 'stopped' THEN 1 ELSE 0 END) as stopped_count,
-        SUM(CASE WHEN last_seen_at < (now() - INTERVAL 10 MINUTE) THEN 1 ELSE 0 END) as offline_count,
+        SUM(CASE WHEN $_recentCondition AND status = 'moving' THEN 1 ELSE 0 END) as moving_count,
+        SUM(CASE WHEN $_recentCondition AND status = 'idle' THEN 1 ELSE 0 END) as idle_count,
+        SUM(CASE WHEN $_recentCondition AND status = 'stopped' THEN 1 ELSE 0 END) as stopped_count,
+        SUM(CASE WHEN $_staleCondition THEN 1 ELSE 0 END) as offline_count,
         SUM(CASE WHEN last_soc <= 20.0 THEN 1 ELSE 0 END) as low_battery_count
       FROM vehicles;
     ''';

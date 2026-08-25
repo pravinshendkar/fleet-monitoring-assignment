@@ -71,7 +71,7 @@ class TelemetryLocalDataSourceImpl implements TelemetryLocalDataSource {
       for (final entry in vehicleMap.entries) {
         final vid = entry.key.replaceAll("'", "''");
         final p = entry.value;
-        final ts = p.eventTimestamp.toIso8601String();
+        final ts = p.eventTimestamp.toUtc().toIso8601String();
         final name = 'EV-${vid.length > 6 ? vid.substring(0, 6) : vid}';
 
         final status = Vehicle.calculateStatus(

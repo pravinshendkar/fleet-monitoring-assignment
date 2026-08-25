@@ -28,6 +28,9 @@ class DuckDbClient {
 
     _db = await duckdb.open(targetPath);
     _connection = await duckdb.connect(_db!);
+    // All timestamps are stored as UTC in TIMESTAMP columns.
+    // Set DuckDB session timezone to UTC so that now() matches stored values.
+    await _connection!.execute("SET TimeZone = 'UTC';");
     await _createTables();
   }
 

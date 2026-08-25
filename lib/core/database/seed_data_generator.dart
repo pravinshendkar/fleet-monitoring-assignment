@@ -13,9 +13,13 @@ class SeedDataGenerator {
     final now = baseTime ?? DateTime.now();
     final packets = <TelemetryPacket>[];
 
-    // Center coordinates: Bangalore (12.9716, 77.5946)
+    // Center coordinates: Bangalore Central Depot (12.9716, 77.5946)
     const baseLat = 12.9716;
     const baseLng = 77.5946;
+
+    // Small deterministic subset of demo vehicles (EV-004, EV-008, EV-012, EV-016)
+    // that navigate crossing the active Bangalore Central Depot geofence
+    final demoVehicleIndices = <int>{4, 8, 12, 16};
 
     for (var i = 1; i <= vehicleCount; i++) {
       final vid = 'EV-${i.toString().padLeft(3, '0')}';
@@ -75,24 +79,147 @@ class SeedDataGenerator {
       final latOffset = (rng.nextDouble() - 0.5) * 0.1;
       final lngOffset = (rng.nextDouble() - 0.5) * 0.1;
 
-      final eventTimestamp = now.subtract(pingAge);
+      final finalTimestamp = now.subtract(pingAge);
+      final finalLat = baseLat + latOffset;
+      final finalLng = baseLng + lngOffset;
 
-      packets.add(
-        TelemetryPacket(
-          packetId: 'pkt_seed_${vid}_${eventTimestamp.millisecondsSinceEpoch}',
-          vehicleId: vid,
-          eventTimestamp: eventTimestamp,
-          ingestTimestamp: now,
-          latitude: baseLat + latOffset,
-          longitude: baseLng + lngOffset,
-          speed: speed,
-          batteryLevel: soc,
-          batteryTemp: temp,
-          odometerKm: 5000.0 + (i * 25.0) + rng.nextInt(500),
-          ignition: ignition,
-          gpsAccuracy: 4.0 + rng.nextDouble() * 3.0,
-        ),
-      );
+      if (demoVehicleIndices.contains(i)) {
+        // Generate a sequence of 6 chronological telemetry packets for trip demo:
+        // Sequence: inside, inside, outside+50m buffer, outside+50m buffer, inside, inside
+        final t1 = finalTimestamp.subtract(const Duration(minutes: 50));
+        final t2 = finalTimestamp.subtract(const Duration(minutes: 40));
+        final t3 = finalTimestamp.subtract(const Duration(minutes: 30));
+        final t4 = finalTimestamp.subtract(const Duration(minutes: 20));
+        final t5 = finalTimestamp.subtract(const Duration(minutes: 10));
+        final t6 = finalTimestamp;
+
+        // Packet 1: inside geofence (dist ~310m <= 800m radius)
+        packets.add(
+          TelemetryPacket(
+            packetId: 'pkt_seed_${vid}_${t1.millisecondsSinceEpoch}',
+            vehicleId: vid,
+            eventTimestamp: t1,
+            ingestTimestamp: now,
+            latitude: baseLat + 0.0020,
+            longitude: baseLng + 0.0020,
+            speed: 25.0,
+            batteryLevel: (soc + 25.0).clamp(0.0, 100.0),
+            batteryTemp: temp,
+            odometerKm: 5000.0 + (i * 25.0),
+            ignition: true,
+            gpsAccuracy: 5.0,
+          ),
+        );
+
+        // Packet 2: inside geofence -> triggers ENTRY 1
+        packets.add(
+          TelemetryPacket(
+            packetId: 'pkt_seed_${vid}_${t2.millisecondsSinceEpoch}',
+            vehicleId: vid,
+            eventTimestamp: t2,
+            ingestTimestamp: now,
+            latitude: baseLat + 0.0020,
+            longitude: baseLng + 0.0020,
+            speed: 30.0,
+            batteryLevel: (soc + 20.0).clamp(0.0, 100.0),
+            batteryTemp: temp,
+            odometerKm: 5000.0 + (i * 25.0) + 1.0,
+            ignition: true,
+            gpsAccuracy: 5.0,
+          ),
+        );
+
+        // Packet 3: outside geofence + 50m buffer (dist ~1395m > 850m)
+        packets.add(
+          TelemetryPacket(
+            packetId: 'pkt_seed_${vid}_${t3.millisecondsSinceEpoch}',
+            vehicleId: vid,
+            eventTimestamp: t3,
+            ingestTimestamp: now,
+            latitude: baseLat + 0.0090,
+            longitude: baseLng + 0.0090,
+            speed: 45.0,
+            batteryLevel: (soc + 15.0).clamp(0.0, 100.0),
+            batteryTemp: temp,
+            odometerKm: 5000.0 + (i * 25.0) + 3.0,
+            ignition: true,
+            gpsAccuracy: 5.0,
+          ),
+        );
+
+        // Packet 4: outside geofence + 50m buffer -> triggers EXIT 1 (creates ongoing trip)
+        packets.add(
+          TelemetryPacket(
+            packetId: 'pkt_seed_${vid}_${t4.millisecondsSinceEpoch}',
+            vehicleId: vid,
+            eventTimestamp: t4,
+            ingestTimestamp: now,
+            latitude: baseLat + 0.0095,
+            longitude: baseLng + 0.0095,
+            speed: 55.0,
+            batteryLevel: (soc + 10.0).clamp(0.0, 100.0),
+            batteryTemp: temp,
+            odometerKm: 5000.0 + (i * 25.0) + 5.0,
+            ignition: true,
+            gpsAccuracy: 5.0,
+          ),
+        );
+
+        // Packet 5: inside geofence
+        packets.add(
+          TelemetryPacket(
+            packetId: 'pkt_seed_${vid}_${t5.millisecondsSinceEpoch}',
+            vehicleId: vid,
+            eventTimestamp: t5,
+            ingestTimestamp: now,
+            latitude: baseLat + 0.0020,
+            longitude: baseLng + 0.0020,
+            speed: 35.0,
+            batteryLevel: (soc + 5.0).clamp(0.0, 100.0),
+            batteryTemp: temp,
+            odometerKm: 5000.0 + (i * 25.0) + 8.0,
+            ignition: true,
+            gpsAccuracy: 5.0,
+          ),
+        );
+
+        // Packet 6: inside geofence (final packet) -> triggers ENTRY 2 (completes trip)
+        packets.add(
+          TelemetryPacket(
+            packetId: 'pkt_seed_${vid}_${t6.millisecondsSinceEpoch}',
+            vehicleId: vid,
+            eventTimestamp: t6,
+            ingestTimestamp: now,
+            latitude: baseLat + 0.0020,
+            longitude: baseLng + 0.0020,
+            speed: speed,
+            batteryLevel: soc,
+            batteryTemp: temp,
+            odometerKm: 5000.0 + (i * 25.0) + 10.0,
+            ignition: ignition,
+            gpsAccuracy: 5.0,
+          ),
+        );
+      } else {
+        // Standard single packet per non-demo vehicle
+        packets.add(
+          TelemetryPacket(
+            packetId:
+                'pkt_seed_${vid}_${finalTimestamp.millisecondsSinceEpoch}',
+            vehicleId: vid,
+            eventTimestamp: finalTimestamp,
+            ingestTimestamp: now,
+            latitude: finalLat,
+            longitude: finalLng,
+            speed: speed,
+            batteryLevel: soc,
+            batteryTemp: temp,
+            odometerKm: 5000.0 + (i * 25.0) + rng.nextInt(500),
+            ignition: ignition,
+            gpsAccuracy: 4.0 + rng.nextDouble() * 3.0,
+          ),
+        );
+      }
     }
 
     return packets;
