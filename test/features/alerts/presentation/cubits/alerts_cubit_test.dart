@@ -62,6 +62,7 @@ class MockVehicleRepositoryAlerts implements VehicleRepository {
     String? searchQuery,
     int limit = 50,
     int offset = 0,
+    bool ignoreStaleness = false,
   }) async => [];
 
   @override
@@ -137,15 +138,47 @@ void main() {
       expect(loaded.recentlyDismissedAlert?.id, 'alert_1');
     });
 
-    test('4. undoDismissal restores alert to active status', () async {
-      await cubit.loadAlerts();
-      await cubit.dismissAlert(testAlert, 'I am on it');
-      await cubit.undoDismissal();
+    test(
+      '4. undoDismissal restores alert to active status before 5s',
+      () async {
+        await cubit.loadAlerts();
+        await cubit.dismissAlert(testAlert, 'I am on it');
+        await cubit.undoDismissal();
 
-      expect(cubit.state, isA<AlertsLoaded>());
-      final loaded = cubit.state as AlertsLoaded;
-      expect(loaded.activeAlerts.length, 1);
-      expect(loaded.activeAlerts.first.status, AlertStatus.active);
-    });
+        expect(cubit.state, isA<AlertsLoaded>());
+        final loaded = cubit.state as AlertsLoaded;
+        expect(loaded.activeAlerts.length, 1);
+        expect(loaded.activeAlerts.first.status, AlertStatus.active);
+        expect(loaded.showUndoBanner, isFalse);
+      },
+    );
+
+    test(
+      '5. dismiss -> Undo available -> 5 seconds expire -> Undo unavailable & pressing UNDO after 5s does nothing',
+      () async {
+        await cubit.loadAlerts();
+        await cubit.dismissAlert(testAlert, 'I am on it');
+
+        // Immediately after dismiss: Undo is available
+        var loaded = cubit.state as AlertsLoaded;
+        expect(loaded.showUndoBanner, isTrue);
+        expect(loaded.recentlyDismissedAlert?.id, 'alert_1');
+
+        // Wait 5 seconds for timer to expire
+        await Future<void>.delayed(
+          const Duration(seconds: 5, milliseconds: 100),
+        );
+
+        // After 5 seconds expire: Undo is unavailable
+        loaded = cubit.state as AlertsLoaded;
+        expect(loaded.showUndoBanner, isFalse);
+        expect(loaded.recentlyDismissedAlert, isNull);
+
+        // Pressing UNDO after 5 seconds does nothing
+        await cubit.undoDismissal();
+        loaded = cubit.state as AlertsLoaded;
+        expect(loaded.activeAlerts, isEmpty); // Alert remains dismissed
+      },
+    );
   });
 }

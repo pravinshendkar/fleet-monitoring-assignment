@@ -40,13 +40,14 @@ class AlertsCubit extends Cubit<AlertsState> {
     try {
       final active = await alertRepository.getActiveAlerts();
       final all = await alertRepository.getAllAlerts();
+      final isUndoActive = _undoTimer != null && _undoTimer!.isActive;
 
       emit(
         AlertsLoaded(
           activeAlerts: active,
           allAlerts: all,
-          recentlyDismissedAlert: _lastDismissedAlert,
-          showUndoBanner: _undoTimer != null && _undoTimer!.isActive,
+          recentlyDismissedAlert: isUndoActive ? _lastDismissedAlert : null,
+          showUndoBanner: isUndoActive,
         ),
       );
     } catch (e) {
@@ -58,19 +59,10 @@ class AlertsCubit extends Cubit<AlertsState> {
     _lastDismissedAlert = alert;
     _undoTimer?.cancel();
 
-    await updateAlertStatusUseCase(
-      UpdateAlertStatusParams(
-        alertId: alert.id,
-        status: AlertStatus.dismissed,
-        dismissalReason: reason,
-      ),
-    );
-
-    await loadAlerts();
-
-    // Start 5-second timer for Undo availability
+    // Start 5-second timer for Undo availability (single source of truth)
     _undoTimer = Timer(const Duration(seconds: 5), () {
       _lastDismissedAlert = null;
+      _undoTimer = null;
       if (state is AlertsLoaded) {
         final current = state as AlertsLoaded;
         emit(
@@ -79,16 +71,33 @@ class AlertsCubit extends Cubit<AlertsState> {
       }
     });
 
-    if (state is AlertsLoaded) {
-      final current = state as AlertsLoaded;
-      emit(
-        current.copyWith(recentlyDismissedAlert: alert, showUndoBanner: true),
-      );
-    }
+    await updateAlertStatusUseCase(
+      UpdateAlertStatusParams(
+        alertId: alert.id,
+        status: AlertStatus.dismissed,
+        dismissalReason: reason,
+      ),
+    );
+
+    final active = await alertRepository.getActiveAlerts();
+    final all = await alertRepository.getAllAlerts();
+
+    emit(
+      AlertsLoaded(
+        activeAlerts: active,
+        allAlerts: all,
+        recentlyDismissedAlert: alert,
+        showUndoBanner: true,
+      ),
+    );
   }
 
   Future<void> undoDismissal() async {
-    if (_lastDismissedAlert == null) return;
+    if (_lastDismissedAlert == null ||
+        _undoTimer == null ||
+        !_undoTimer!.isActive) {
+      return;
+    }
 
     final alertToRestore = _lastDismissedAlert!;
     _undoTimer?.cancel();

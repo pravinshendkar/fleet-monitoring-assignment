@@ -20,6 +20,7 @@ class VehicleRepositoryImpl implements VehicleRepository {
     String? searchQuery,
     int limit = 50,
     int offset = 0,
+    bool ignoreStaleness = false,
   }) async {
     return await localDataSource.getVehicles(
       statusFilter: statusFilter,
@@ -27,6 +28,7 @@ class VehicleRepositoryImpl implements VehicleRepository {
       searchQuery: searchQuery,
       limit: limit,
       offset: offset,
+      ignoreStaleness: ignoreStaleness,
     );
   }
 

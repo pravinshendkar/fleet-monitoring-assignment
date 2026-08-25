@@ -10,6 +10,7 @@ abstract class VehicleLocalDataSource {
     String? searchQuery,
     int limit = 50,
     int offset = 0,
+    bool ignoreStaleness = false,
   });
 
   Future<VehicleModel?> getVehicleById(String vehicleId);
@@ -37,17 +38,21 @@ class VehicleLocalDataSourceImpl implements VehicleLocalDataSource {
     String? searchQuery,
     int limit = 50,
     int offset = 0,
+    bool ignoreStaleness = false,
   }) async {
     var conditions = <String>[];
 
     // Status filtering uses the same business rule as Vehicle.calculateStatus():
     // - OFFLINE: last_seen_at > 10 minutes ago (stale)
     // - MOVING/IDLE/STOPPED: stored status AND last_seen_at <= 10 minutes ago
+    // When ignoreStaleness is true (e.g. simulation service), query raw DB status without staleness condition.
     if (statusFilter != null) {
-      if (statusFilter == VehicleStatus.offline) {
+      if (!ignoreStaleness && statusFilter == VehicleStatus.offline) {
         conditions.add("($_staleCondition)");
-      } else {
+      } else if (!ignoreStaleness) {
         conditions.add("status = '${statusFilter.name}' AND $_recentCondition");
+      } else {
+        conditions.add("status = '${statusFilter.name}'");
       }
     }
 
@@ -76,7 +81,9 @@ class VehicleLocalDataSourceImpl implements VehicleLocalDataSource {
     ''';
 
     final maps = await dbClient.query(sql);
-    return maps.map((m) => VehicleModel.fromMap(m)).toList();
+    return maps
+        .map((m) => VehicleModel.fromMap(m, ignoreStaleness: ignoreStaleness))
+        .toList();
   }
 
   @override

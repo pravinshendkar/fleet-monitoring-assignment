@@ -79,20 +79,29 @@ class _AlertsViewState extends State<AlertsView> {
           Expanded(
             child: BlocConsumer<AlertsCubit, AlertsState>(
               listener: (context, state) {
-                if (state is AlertsLoaded && state.showUndoBanner) {
-                  ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: const Text('Alert dismissed.'),
-                      duration: const Duration(seconds: 5),
-                      action: SnackBarAction(
-                        label: 'UNDO',
-                        onPressed: () {
-                          context.read<AlertsCubit>().undoDismissal();
-                        },
+                if (state is AlertsLoaded) {
+                  final messenger = ScaffoldMessenger.maybeOf(context);
+                  if (messenger == null) return;
+
+                  if (state.showUndoBanner) {
+                    messenger.hideCurrentSnackBar();
+                    messenger.showSnackBar(
+                      SnackBar(
+                        content: const Text('Alert dismissed.'),
+                        duration: const Duration(
+                          days: 365,
+                        ), // Cubit is single source of truth for timing
+                        action: SnackBarAction(
+                          label: 'UNDO',
+                          onPressed: () {
+                            context.read<AlertsCubit>().undoDismissal();
+                          },
+                        ),
                       ),
-                    ),
-                  );
+                    );
+                  } else {
+                    messenger.hideCurrentSnackBar();
+                  }
                 }
               },
               builder: (context, state) {
@@ -339,6 +348,7 @@ class _AlertsViewState extends State<AlertsView> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),

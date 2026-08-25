@@ -26,6 +26,7 @@ class MockVehicleRepositoryDetail implements VehicleRepository {
     String? searchQuery,
     int limit = 50,
     int offset = 0,
+    bool ignoreStaleness = false,
   }) async => [];
 
   @override

@@ -63,5 +63,33 @@ void main() {
         expect(path.endsWith('fleet_console.duckdb'), isTrue);
       },
     );
+
+    test(
+      '3. Regression Test: Container disposal during active simulation tick safely awaits in-flight tick without DuckDB error',
+      () async {
+        final container = await DependencyContainer.create(
+          dbPath: tempDbPath,
+          autoSeed: true,
+          enableSimulation: true,
+        );
+
+        // Trigger simulation ticks with rapid interval
+        container.telemetrySimulationService.startSimulation(
+          interval: const Duration(milliseconds: 10),
+        );
+
+        // Give tick time to start executing queries
+        await Future<void>.delayed(const Duration(milliseconds: 15));
+
+        // Dispose container while tick may be in-flight
+        await container.dispose();
+
+        // Verify simulation service is disposed and no DuckDB queries throw post-disposal
+        expect(container.telemetrySimulationService.isDisposed, isTrue);
+
+        // Wait extra time to confirm timer callbacks do not execute or access closed DuckDB
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+      },
+    );
   });
 }

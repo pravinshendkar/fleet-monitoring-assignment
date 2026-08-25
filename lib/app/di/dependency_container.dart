@@ -4,6 +4,7 @@ import 'package:path_provider/path_provider.dart';
 import '../../core/database/database_event_bus.dart';
 import '../../core/database/duckdb_client.dart';
 import '../../core/database/seed_data_service.dart';
+import '../../core/simulation/telemetry_simulation_service.dart';
 import '../../features/alerts/data/datasources/alert_local_datasource.dart';
 import '../../features/alerts/data/repositories/alert_repository_impl.dart';
 import '../../features/alerts/domain/repositories/alert_repository.dart';
@@ -78,6 +79,9 @@ class DependencyContainer {
   final GetVehicleTripsUseCase getVehicleTripsUseCase;
   final GetAllTripsUseCase getAllTripsUseCase;
 
+  // Background Simulation Service
+  final TelemetrySimulationService telemetrySimulationService;
+
   DependencyContainer._({
     required this.dbClient,
     required this.eventBus,
@@ -102,11 +106,13 @@ class DependencyContainer {
     required this.processTripsUseCase,
     required this.getVehicleTripsUseCase,
     required this.getAllTripsUseCase,
+    required this.telemetrySimulationService,
   });
 
   static Future<DependencyContainer> create({
     String? dbPath,
     bool autoSeed = true,
+    bool enableSimulation = true,
   }) async {
     final resolvedPath = dbPath ?? await resolvePlatformDatabasePath();
 
@@ -175,6 +181,11 @@ class DependencyContainer {
       processTripsUseCase: processTrips,
     );
 
+    final simulationService = TelemetrySimulationService(
+      vehicleRepository: vehicleRepo,
+      processTelemetryBatchUseCase: processTelemetryBatch,
+    );
+
     final container = DependencyContainer._(
       dbClient: dbClient,
       eventBus: eventBus,
@@ -199,6 +210,7 @@ class DependencyContainer {
       processTripsUseCase: processTrips,
       getVehicleTripsUseCase: getVehicleTrips,
       getAllTripsUseCase: getAllTrips,
+      telemetrySimulationService: simulationService,
     );
 
     // 5. Seed Data Execution
@@ -209,12 +221,17 @@ class DependencyContainer {
         createGeofenceUseCase: createGeofence,
       );
       await seedService.seedIfEmpty(vehicleCount: 500);
+
+      if (enableSimulation) {
+        simulationService.startSimulation();
+      }
     }
 
     return container;
   }
 
   Future<void> dispose() async {
+    await telemetrySimulationService.dispose();
     eventBus.dispose();
     await dbClient.close();
   }

@@ -53,7 +53,7 @@ flutter pub get
 # 2. Run static analysis (0 errors guaranteed)
 dart analyze
 
-# 3. Run full automated test suite (76 passing tests)
+# 3. Run full automated test suite (88 passing tests)
 flutter test
 
 # 4. Launch the application on Linux Desktop
@@ -89,7 +89,7 @@ Run the full test suite using:
 flutter test
 ```
 
-**Result**: **76 / 76 tests passing** across 12 test files covering domain rules, use cases, repositories, DuckDB persistence, late-event handling, Cubit states, and Widget UI views.
+**Result**: **88 / 88 tests passing** across 12 test files covering domain rules, use cases, repositories, DuckDB persistence, late-event handling, Cubit states, and Widget UI views.
 
 ---
 

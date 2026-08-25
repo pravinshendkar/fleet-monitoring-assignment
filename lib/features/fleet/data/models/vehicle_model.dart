@@ -54,7 +54,10 @@ class VehicleModel extends Vehicle {
     return DateTime.parse(normalized).toLocal();
   }
 
-  factory VehicleModel.fromMap(Map<String, dynamic> map) {
+  factory VehicleModel.fromMap(
+    Map<String, dynamic> map, {
+    bool ignoreStaleness = false,
+  }) {
     final lastSeen = parseUtcDateTime(map['last_seen_at']);
     final isStale =
         DateTime.now().difference(lastSeen) > const Duration(minutes: 10);
@@ -65,7 +68,9 @@ class VehicleModel extends Vehicle {
       orElse: () => VehicleStatus.offline,
     );
 
-    final status = isStale ? VehicleStatus.offline : dbStatus;
+    final status = (!ignoreStaleness && isStale)
+        ? VehicleStatus.offline
+        : dbStatus;
 
     return VehicleModel(
       id: map['vehicle_id'] as String,

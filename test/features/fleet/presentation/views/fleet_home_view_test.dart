@@ -34,6 +34,7 @@ class MockVehicleRepositoryView implements VehicleRepository {
     String? searchQuery,
     int limit = 50,
     int offset = 0,
+    bool ignoreStaleness = false,
   }) async {
     if (statusFilter != null) {
       return vehicleList.where((v) => v.status == statusFilter).toList();
