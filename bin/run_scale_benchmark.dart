@@ -2,17 +2,18 @@ import 'dart:io';
 import 'package:fleet_console/core/database/duckdb_client.dart';
 import 'package:fleet_console/features/fleet/data/datasources/vehicle_local_datasource.dart';
 import 'package:fleet_console/features/fleet/domain/entities/vehicle.dart';
+import 'package:flutter/foundation.dart';
 
 void main() async {
-  print('====================================================');
-  print(' Bytebeam Fleet Console - 2,000,000 Row Scale Benchmark');
-  print('====================================================');
+  debugPrint('====================================================');
+  debugPrint(' Bytebeam Fleet Console - 2,000,000 Row Scale Benchmark');
+  debugPrint('====================================================');
 
   final tempDbPath = 'scale_benchmark_2m_${DateTime.now().millisecondsSinceEpoch}.duckdb';
   final dbFile = File(tempDbPath);
 
   // 1. Cold Start Measurement (App Process / DB Init / Fleet Load)
-  print('\n[1/4] Measuring Cold-Start Duration...');
+  debugPrint('\n[1/4] Measuring Cold-Start Duration...');
   final coldStartStopwatch = Stopwatch()..start();
 
   final client = DuckDbClient();
@@ -26,10 +27,10 @@ void main() async {
 
   coldStartStopwatch.stop();
   final coldStartMs = coldStartStopwatch.elapsedMilliseconds;
-  print('  -> Cold Start Duration: $coldStartMs ms');
+  debugPrint('  -> Cold Start Duration: $coldStartMs ms');
 
   // 2. High-Performance Bulk Dataset Generation (500 Vehicles, 2,000,000 Telemetry Rows)
-  print('\n[2/4] Populating 500 Vehicles & 2,000,000 Signal Rows in DuckDB...');
+  debugPrint('\n[2/4] Populating 500 Vehicles & 2,000,000 Signal Rows in DuckDB...');
   final ingestStopwatch = Stopwatch()..start();
 
   // Populate 500 vehicles
@@ -85,10 +86,10 @@ void main() async {
   final totalVehicles = vehicleCountMaps.first['count'];
   final totalTelemetry = telemetryCountMaps.first['count'];
 
-  print('  -> Ingested $totalVehicles vehicles & $totalTelemetry signal rows in ${ingestStopwatch.elapsedMilliseconds} ms.');
+  debugPrint('  -> Ingested $totalVehicles vehicles & $totalTelemetry signal rows in ${ingestStopwatch.elapsedMilliseconds} ms.');
 
   // 3. Fleet Query Latency Benchmark (p50 & p95 over 50 iterations)
-  print('\n[3/4] Benchmarking Warm Fleet-List Queries (50 Iterations)...');
+  debugPrint('\n[3/4] Benchmarking Warm Fleet-List Queries (50 Iterations)...');
 
   // Warm-up query
   await vehicleDS.getFleetSummary();
@@ -115,14 +116,14 @@ void main() async {
   final p50 = latencies[(iterations * 0.50).floor()];
   final p95 = latencies[(iterations * 0.95).floor()];
 
-  print('  -> Iterations: $iterations');
-  print('  -> Fleet Query Latency p50: $p50 ms');
-  print('  -> Fleet Query Latency p95: $p95 ms');
+  debugPrint('  -> Iterations: $iterations');
+  debugPrint('  -> Fleet Query Latency p50: $p50 ms');
+  debugPrint('  -> Fleet Query Latency p95: $p95 ms');
 
   // 4. Memory Measurement
-  print('\n[4/4] Process Memory Measurement...');
+  debugPrint('\n[4/4] Process Memory Measurement...');
   final rssMb = (ProcessInfo.currentRss / (1024 * 1024)).toStringAsFixed(1);
-  print('  -> Memory RSS at rest: $rssMb MB');
+  debugPrint('  -> Memory RSS at rest: $rssMb MB');
 
   // Cleanup
   await client.close();
@@ -130,13 +131,13 @@ void main() async {
     await dbFile.delete();
   }
 
-  print('\n====================================================');
-  print(' SUMMARY OF EMPIRICAL MEASUREMENTS');
-  print('====================================================');
-  print(' Dataset Size:      $totalVehicles Vehicles, $totalTelemetry Telemetry Packets');
-  print(' Cold-Start:        $coldStartMs ms');
-  print(' Fleet Query p50:   $p50 ms');
-  print(' Fleet Query p95:   $p95 ms');
-  print(' Memory (RSS):      $rssMb MB');
-  print('====================================================');
+  debugPrint('\n====================================================');
+  debugPrint(' SUMMARY OF EMPIRICAL MEASUREMENTS');
+  debugPrint('====================================================');
+  debugPrint(' Dataset Size:      $totalVehicles Vehicles, $totalTelemetry Telemetry Packets');
+  debugPrint(' Cold-Start:        $coldStartMs ms');
+  debugPrint(' Fleet Query p50:   $p50 ms');
+  debugPrint(' Fleet Query p95:   $p95 ms');
+  debugPrint(' Memory (RSS):      $rssMb MB');
+  debugPrint('====================================================');
 }
