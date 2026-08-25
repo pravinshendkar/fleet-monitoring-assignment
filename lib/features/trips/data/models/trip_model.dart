@@ -25,8 +25,8 @@ class TripModel extends Trip {
           : DateTime.parse(map['start_time'].toString()),
       endTime: map['end_time'] != null
           ? (map['end_time'] is DateTime
-              ? map['end_time'] as DateTime
-              : DateTime.parse(map['end_time'].toString()))
+                ? map['end_time'] as DateTime
+                : DateTime.parse(map['end_time'].toString()))
           : null,
       distanceKm: (map['distance_km'] as num).toDouble(),
       maxSpeedKmh: (map['max_speed'] as num).toDouble(),

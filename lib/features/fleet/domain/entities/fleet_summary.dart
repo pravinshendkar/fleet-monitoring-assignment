@@ -19,11 +19,11 @@ class FleetSummary extends Equatable {
 
   @override
   List<Object?> get props => [
-        totalVehicles,
-        movingCount,
-        idleCount,
-        stoppedCount,
-        offlineCount,
-        lowBatteryAlertCount,
-      ];
+    totalVehicles,
+    movingCount,
+    idleCount,
+    stoppedCount,
+    offlineCount,
+    lowBatteryAlertCount,
+  ];
 }

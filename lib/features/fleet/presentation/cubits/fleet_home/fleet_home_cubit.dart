@@ -59,12 +59,14 @@ class FleetHomeCubit extends Cubit<FleetHomeState> {
         ),
       );
 
-      emit(FleetHomeLoaded(
-        summary: summary,
-        vehicles: vehicles,
-        selectedFilter: _currentFilter,
-        searchQuery: _currentSearchQuery,
-      ));
+      emit(
+        FleetHomeLoaded(
+          summary: summary,
+          vehicles: vehicles,
+          selectedFilter: _currentFilter,
+          searchQuery: _currentSearchQuery,
+        ),
+      );
     } catch (e) {
       emit(FleetHomeError('Failed to load fleet data: ${e.toString()}'));
     }

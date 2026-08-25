@@ -4,10 +4,7 @@ import '../../domain/entities/signal_reading.dart';
 class SignalReadingRow extends StatelessWidget {
   final SignalReading signal;
 
-  const SignalReadingRow({
-    super.key,
-    required this.signal,
-  });
+  const SignalReadingRow({super.key, required this.signal});
 
   @override
   Widget build(BuildContext context) {
@@ -123,7 +120,9 @@ class SignalReadingRow extends StatelessWidget {
         );
 
       case SignalVerdict.none:
-        return const SizedBox(width: 60); // Empty placeholder for never-reported signal
+        return const SizedBox(
+          width: 60,
+        ); // Empty placeholder for never-reported signal
     }
   }
 }

@@ -5,6 +5,10 @@ abstract class AlertRepository {
   Future<List<Alert>> getActiveAlerts();
   Future<List<Alert>> getVehicleAlerts(String vehicleId);
   Future<List<Alert>> getAllAlerts();
-  Future<void> updateAlertStatus(String alertId, AlertStatus status, {String? dismissalReason});
+  Future<void> updateAlertStatus(
+    String alertId,
+    AlertStatus status, {
+    String? dismissalReason,
+  });
   Future<void> evaluateTelemetryAlerts(List<TelemetryPacket> packets);
 }

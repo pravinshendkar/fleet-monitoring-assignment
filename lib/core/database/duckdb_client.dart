@@ -5,13 +5,19 @@ import 'package:dart_duckdb/src/ffi/load_library.dart' as duck_load;
 import 'duckdb_tables.dart';
 
 class DuckDbClient {
+  final String databasePath;
   Database? _db;
   Connection? _connection;
 
-  Future<void> init([String path = 'fleet_console.duckdb']) async {
+  DuckDbClient({this.databasePath = 'fleet_console.duckdb'});
+
+  Future<void> init([String? path]) async {
+    final targetPath = path ?? databasePath;
+
     if (Platform.isLinux) {
       try {
-        final libPath = '${Directory.current.path}/build/linux/x64/debug/bundle/lib/libduckdb.so';
+        final libPath =
+            '${Directory.current.path}/build/linux/x64/debug/bundle/lib/libduckdb.so';
         if (File(libPath).existsSync()) {
           duck_load.open.overrideFor(OperatingSystem.linux, libPath);
         }
@@ -20,7 +26,7 @@ class DuckDbClient {
       }
     }
 
-    _db = await duckdb.open(path);
+    _db = await duckdb.open(targetPath);
     _connection = await duckdb.connect(_db!);
     await _createTables();
   }

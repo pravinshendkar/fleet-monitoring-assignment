@@ -52,13 +52,13 @@ class Vehicle extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        status,
-        lastLatitude,
-        lastLongitude,
-        lastSoc,
-        lastSeenAt,
-        ignition,
-      ];
+    id,
+    name,
+    status,
+    lastLatitude,
+    lastLongitude,
+    lastSoc,
+    lastSeenAt,
+    ignition,
+  ];
 }

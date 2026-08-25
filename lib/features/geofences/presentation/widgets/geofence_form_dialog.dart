@@ -4,10 +4,7 @@ import '../../domain/entities/geofence.dart';
 class GeofenceFormDialog extends StatefulWidget {
   final Geofence? geofence; // null for Create, non-null for Edit
 
-  const GeofenceFormDialog({
-    super.key,
-    this.geofence,
-  });
+  const GeofenceFormDialog({super.key, this.geofence});
 
   @override
   State<GeofenceFormDialog> createState() => _GeofenceFormDialogState();
@@ -25,9 +22,15 @@ class _GeofenceFormDialogState extends State<GeofenceFormDialog> {
     super.initState();
     final g = widget.geofence;
     _nameController = TextEditingController(text: g?.name ?? '');
-    _latController = TextEditingController(text: g != null ? g.centerLat.toString() : '12.9716');
-    _lngController = TextEditingController(text: g != null ? g.centerLng.toString() : '77.5946');
-    _radiusController = TextEditingController(text: g != null ? g.radiusMeters.toStringAsFixed(0) : '500');
+    _latController = TextEditingController(
+      text: g != null ? g.centerLat.toString() : '12.9716',
+    );
+    _lngController = TextEditingController(
+      text: g != null ? g.centerLng.toString() : '77.5946',
+    );
+    _radiusController = TextEditingController(
+      text: g != null ? g.radiusMeters.toStringAsFixed(0) : '500',
+    );
   }
 
   @override
@@ -67,7 +70,10 @@ class _GeofenceFormDialogState extends State<GeofenceFormDialog> {
               const SizedBox(height: 12),
               TextFormField(
                 controller: _latController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                  signed: true,
+                ),
                 decoration: const InputDecoration(
                   labelText: 'Center Latitude',
                   hintText: 'e.g. 12.9716',
@@ -83,7 +89,10 @@ class _GeofenceFormDialogState extends State<GeofenceFormDialog> {
               const SizedBox(height: 12),
               TextFormField(
                 controller: _lngController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                  signed: true,
+                ),
                 decoration: const InputDecoration(
                   labelText: 'Center Longitude',
                   hintText: 'e.g. 77.5946',
@@ -99,7 +108,9 @@ class _GeofenceFormDialogState extends State<GeofenceFormDialog> {
               const SizedBox(height: 12),
               TextFormField(
                 controller: _radiusController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 decoration: const InputDecoration(
                   labelText: 'Radius (meters)',
                   hintText: 'e.g. 500',
@@ -145,12 +156,9 @@ class _GeofenceFormDialogState extends State<GeofenceFormDialog> {
         );
         Navigator.of(context).pop(updated);
       } else {
-        Navigator.of(context).pop({
-          'name': name,
-          'lat': lat,
-          'lng': lng,
-          'radius': radius,
-        });
+        Navigator.of(
+          context,
+        ).pop({'name': name, 'lat': lat, 'lng': lng, 'radius': radius});
       }
     }
   }

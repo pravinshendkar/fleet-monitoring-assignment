@@ -36,8 +36,8 @@ class AlertModel extends Alert {
           : DateTime.parse(map['updated_at'].toString()).toUtc(),
       dismissedAt: map['dismissed_at'] != null
           ? (map['dismissed_at'] is DateTime
-              ? (map['dismissed_at'] as DateTime).toUtc()
-              : DateTime.parse(map['dismissed_at'].toString()).toUtc())
+                ? (map['dismissed_at'] as DateTime).toUtc()
+                : DateTime.parse(map['dismissed_at'].toString()).toUtc())
           : null,
       dismissalReason: map['dismissal_reason'] as String?,
     );

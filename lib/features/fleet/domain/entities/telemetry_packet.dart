@@ -31,17 +31,17 @@ class TelemetryPacket extends Equatable {
 
   @override
   List<Object?> get props => [
-        packetId,
-        vehicleId,
-        eventTimestamp,
-        ingestTimestamp,
-        latitude,
-        longitude,
-        speed,
-        batteryLevel,
-        batteryTemp,
-        odometerKm,
-        ignition,
-        gpsAccuracy,
-      ];
+    packetId,
+    vehicleId,
+    eventTimestamp,
+    ingestTimestamp,
+    latitude,
+    longitude,
+    speed,
+    batteryLevel,
+    batteryTemp,
+    odometerKm,
+    ignition,
+    gpsAccuracy,
+  ];
 }

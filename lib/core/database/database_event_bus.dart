@@ -26,9 +26,6 @@ class DatabaseChangeEvent {
   final String? entityId;
   final DateTime timestamp;
 
-  DatabaseChangeEvent({
-    required this.table,
-    this.entityId,
-    DateTime? timestamp,
-  }) : timestamp = timestamp ?? DateTime.now();
+  DatabaseChangeEvent({required this.table, this.entityId, DateTime? timestamp})
+    : timestamp = timestamp ?? DateTime.now();
 }

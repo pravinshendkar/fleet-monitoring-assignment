@@ -5,11 +5,7 @@ class VehicleCard extends StatelessWidget {
   final Vehicle vehicle;
   final VoidCallback? onTap;
 
-  const VehicleCard({
-    super.key,
-    required this.vehicle,
-    this.onTap,
-  });
+  const VehicleCard({super.key, required this.vehicle, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -18,10 +14,7 @@ class VehicleCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: Colors.grey.withValues(alpha: 0.2),
-          width: 1,
-        ),
+        side: BorderSide(color: Colors.grey.withValues(alpha: 0.2), width: 1),
       ),
       child: InkWell(
         onTap: onTap,
@@ -118,15 +111,24 @@ class VehicleCard extends StatelessWidget {
                   if (vehicle.lastSoc <= 20.0) ...[
                     const SizedBox(width: 12),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.red.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                        border: Border.all(
+                          color: Colors.red.withValues(alpha: 0.3),
+                        ),
                       ),
                       child: const Row(
                         children: [
-                          Icon(Icons.warning_amber_rounded, color: Colors.red, size: 14),
+                          Icon(
+                            Icons.warning_amber_rounded,
+                            color: Colors.red,
+                            size: 14,
+                          ),
                           SizedBox(width: 4),
                           Text(
                             'Low Battery',
@@ -158,8 +160,12 @@ class VehicleCard extends StatelessWidget {
                         'Last ping: ${_formatLastSeen(vehicle.lastSeenAt)}',
                         style: TextStyle(
                           fontSize: 11,
-                          color: vehicle.isStale ? Colors.orange[800] : Colors.grey[600],
-                          fontWeight: vehicle.isStale ? FontWeight.w600 : FontWeight.normal,
+                          color: vehicle.isStale
+                              ? Colors.orange[800]
+                              : Colors.grey[600],
+                          fontWeight: vehicle.isStale
+                              ? FontWeight.w600
+                              : FontWeight.normal,
                         ),
                       ),
                     ],
@@ -209,11 +215,7 @@ class VehicleCard extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: TextStyle(
-          color: fg,
-          fontSize: 11,
-          fontWeight: FontWeight.bold,
-        ),
+        style: TextStyle(color: fg, fontSize: 11, fontWeight: FontWeight.bold),
       ),
     );
   }

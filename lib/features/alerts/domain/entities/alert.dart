@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 enum AlertType { lowBattery, criticalBattery, overheating }
+
 enum AlertStatus { active, escalated, dismissed, resolved }
 
 class Alert extends Equatable {
@@ -64,21 +65,23 @@ class Alert extends Equatable {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       dismissedAt: clearDismissedAt ? null : (dismissedAt ?? this.dismissedAt),
-      dismissalReason: clearDismissalReason ? null : (dismissalReason ?? this.dismissalReason),
+      dismissalReason: clearDismissalReason
+          ? null
+          : (dismissalReason ?? this.dismissalReason),
     );
   }
 
   @override
   List<Object?> get props => [
-        id,
-        vehicleId,
-        type,
-        status,
-        triggerValue,
-        threshold,
-        createdAt,
-        updatedAt,
-        dismissedAt,
-        dismissalReason,
-      ];
+    id,
+    vehicleId,
+    type,
+    status,
+    triggerValue,
+    threshold,
+    createdAt,
+    updatedAt,
+    dismissedAt,
+    dismissalReason,
+  ];
 }

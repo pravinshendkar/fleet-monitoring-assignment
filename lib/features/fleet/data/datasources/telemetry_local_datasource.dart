@@ -31,18 +31,23 @@ class TelemetryLocalDataSourceImpl implements TelemetryLocalDataSource {
     try {
       const chunkSize = 500;
       for (var i = 0; i < packets.length; i += chunkSize) {
-        final end = (i + chunkSize < packets.length) ? i + chunkSize : packets.length;
+        final end = (i + chunkSize < packets.length)
+            ? i + chunkSize
+            : packets.length;
         final chunk = packets.sublist(i, end);
 
-        final values = chunk.map((p) {
-          final eventTs = p.eventTimestamp.toUtc().toIso8601String();
-          final ingestTs = p.ingestTimestamp.toUtc().toIso8601String();
-          final pid = p.packetId.replaceAll("'", "''");
-          final vid = p.vehicleId.replaceAll("'", "''");
-          return "('$pid', '$vid', '$eventTs', '$ingestTs', ${p.latitude}, ${p.longitude}, ${p.speed}, ${p.batteryLevel}, ${p.batteryTemp}, ${p.odometerKm}, ${p.ignition}, ${p.gpsAccuracy})";
-        }).join(', ');
+        final values = chunk
+            .map((p) {
+              final eventTs = p.eventTimestamp.toUtc().toIso8601String();
+              final ingestTs = p.ingestTimestamp.toUtc().toIso8601String();
+              final pid = p.packetId.replaceAll("'", "''");
+              final vid = p.vehicleId.replaceAll("'", "''");
+              return "('$pid', '$vid', '$eventTs', '$ingestTs', ${p.latitude}, ${p.longitude}, ${p.speed}, ${p.batteryLevel}, ${p.batteryTemp}, ${p.odometerKm}, ${p.ignition}, ${p.gpsAccuracy})";
+            })
+            .join(', ');
 
-        final sql = '''
+        final sql =
+            '''
           INSERT INTO telemetry_packets (
             packet_id, vehicle_id, event_timestamp, ingest_timestamp,
             latitude, longitude, speed, battery_level, battery_temp, odometer_km, ignition, gps_accuracy
@@ -57,7 +62,8 @@ class TelemetryLocalDataSourceImpl implements TelemetryLocalDataSource {
       final vehicleMap = <String, TelemetryPacketModel>{};
       for (final packet in packets) {
         final existing = vehicleMap[packet.vehicleId];
-        if (existing == null || packet.eventTimestamp.isAfter(existing.eventTimestamp)) {
+        if (existing == null ||
+            packet.eventTimestamp.isAfter(existing.eventTimestamp)) {
           vehicleMap[packet.vehicleId] = packet;
         }
       }
@@ -67,14 +73,15 @@ class TelemetryLocalDataSourceImpl implements TelemetryLocalDataSource {
         final p = entry.value;
         final ts = p.eventTimestamp.toIso8601String();
         final name = 'EV-${vid.length > 6 ? vid.substring(0, 6) : vid}';
-        
+
         final status = Vehicle.calculateStatus(
           lastSeenAt: p.eventTimestamp,
           speed: p.speed,
           ignition: p.ignition,
         ).name;
 
-        final upsertSql = '''
+        final upsertSql =
+            '''
           INSERT INTO vehicles (
             vehicle_id, name, status, last_latitude, last_longitude, last_soc, last_seen_at, ignition
           ) VALUES (
@@ -115,7 +122,8 @@ class TelemetryLocalDataSourceImpl implements TelemetryLocalDataSource {
       whereClause += " AND event_timestamp <= '${endTime.toIso8601String()}'";
     }
 
-    final sql = '''
+    final sql =
+        '''
       SELECT * FROM telemetry_packets
       $whereClause
       ORDER BY event_timestamp DESC

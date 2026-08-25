@@ -29,7 +29,9 @@ void main() {
       final tablesResult = await client.query(
         "SELECT table_name FROM information_schema.tables WHERE table_schema = 'main';",
       );
-      final tableNames = tablesResult.map((r) => r['table_name'] as String).toList();
+      final tableNames = tablesResult
+          .map((r) => r['table_name'] as String)
+          .toList();
 
       expect(tableNames, contains('telemetry_packets'));
       expect(tableNames, contains('vehicles'));
@@ -163,7 +165,12 @@ void main() {
         ignition: true,
       );
 
-      await telemetryDS.insertTelemetryBatch([pMoving, pIdle, pStopped, pOffline]);
+      await telemetryDS.insertTelemetryBatch([
+        pMoving,
+        pIdle,
+        pStopped,
+        pOffline,
+      ]);
 
       final summary = await vehicleDS.getFleetSummary();
       expect(summary.totalVehicles, 4);
@@ -174,11 +181,15 @@ void main() {
       expect(summary.lowBatteryAlertCount, 1);
 
       // Test filtered vehicle listing
-      final movingVehicles = await vehicleDS.getVehicles(statusFilter: VehicleStatus.moving);
+      final movingVehicles = await vehicleDS.getVehicles(
+        statusFilter: VehicleStatus.moving,
+      );
       expect(movingVehicles.length, 1);
       expect(movingVehicles.first.id, 'v_moving');
 
-      final offlineVehicles = await vehicleDS.getVehicles(statusFilter: VehicleStatus.offline);
+      final offlineVehicles = await vehicleDS.getVehicles(
+        statusFilter: VehicleStatus.offline,
+      );
       expect(offlineVehicles.length, 1);
       expect(offlineVehicles.first.id, 'v_offline');
     });

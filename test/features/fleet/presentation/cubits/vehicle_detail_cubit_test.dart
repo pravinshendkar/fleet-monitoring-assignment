@@ -36,10 +36,19 @@ class MockVehicleRepositoryDetail implements VehicleRepository {
 
 class FakeTelemetryRepository implements TelemetryRepository {
   @override
-  Future<List<TelemetryPacket>> getSocHistory(String vehicleId, {DateTime? startTime, int limit = 100}) async => [];
+  Future<List<TelemetryPacket>> getSocHistory(
+    String vehicleId, {
+    DateTime? startTime,
+    int limit = 100,
+  }) async => [];
 
   @override
-  Future<List<TelemetryPacket>> getVehicleTelemetryHistory(String vehicleId, {DateTime? startTime, DateTime? endTime, int limit = 100}) async => [];
+  Future<List<TelemetryPacket>> getVehicleTelemetryHistory(
+    String vehicleId, {
+    DateTime? startTime,
+    DateTime? endTime,
+    int limit = 100,
+  }) async => [];
 
   @override
   Future<void> ingestBatch(List<TelemetryPacket> packets) async {}
@@ -49,10 +58,10 @@ class MockGetVehicleDetailsUseCase extends GetVehicleDetailsUseCase {
   VehicleDetailsResult mockResult;
 
   MockGetVehicleDetailsUseCase(this.mockResult)
-      : super(
-          vehicleRepository: MockVehicleRepositoryDetail(),
-          telemetryRepository: FakeTelemetryRepository(),
-        );
+    : super(
+        vehicleRepository: MockVehicleRepositoryDetail(),
+        telemetryRepository: FakeTelemetryRepository(),
+      );
 
   @override
   Future<VehicleDetailsResult> call(String vehicleId) async {
@@ -151,12 +160,36 @@ void main() {
     test('3. Vehicle not found emits VehicleDetailError state', () async {
       getVehicleDetails.mockResult = VehicleDetailsResult(
         vehicle: null,
-        socSignal: const SignalReading(label: 'SOC', displayValue: '—', verdict: SignalVerdict.none),
-        rangeSignal: const SignalReading(label: 'Range', displayValue: '—', verdict: SignalVerdict.none),
-        speedSignal: const SignalReading(label: 'Speed', displayValue: '—', verdict: SignalVerdict.none),
-        tempSignal: const SignalReading(label: 'Battery Temp', displayValue: '—', verdict: SignalVerdict.none),
-        odometerSignal: const SignalReading(label: 'Odometer', displayValue: '—', verdict: SignalVerdict.none),
-        lastPingSignal: const SignalReading(label: 'Last Ping', displayValue: '—', verdict: SignalVerdict.none),
+        socSignal: const SignalReading(
+          label: 'SOC',
+          displayValue: '—',
+          verdict: SignalVerdict.none,
+        ),
+        rangeSignal: const SignalReading(
+          label: 'Range',
+          displayValue: '—',
+          verdict: SignalVerdict.none,
+        ),
+        speedSignal: const SignalReading(
+          label: 'Speed',
+          displayValue: '—',
+          verdict: SignalVerdict.none,
+        ),
+        tempSignal: const SignalReading(
+          label: 'Battery Temp',
+          displayValue: '—',
+          verdict: SignalVerdict.none,
+        ),
+        odometerSignal: const SignalReading(
+          label: 'Odometer',
+          displayValue: '—',
+          verdict: SignalVerdict.none,
+        ),
+        lastPingSignal: const SignalReading(
+          label: 'Last Ping',
+          displayValue: '—',
+          verdict: SignalVerdict.none,
+        ),
         socHistory: const [],
         telemetryHistory: const [],
       );

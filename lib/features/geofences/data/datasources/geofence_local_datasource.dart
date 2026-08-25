@@ -35,7 +35,8 @@ class GeofenceLocalDataSourceImpl implements GeofenceLocalDataSource {
     final cleanName = geofence.name.replaceAll("'", "''");
     final createdAt = geofence.createdAt.toIso8601String();
 
-    final sql = '''
+    final sql =
+        '''
       INSERT INTO geofences (
         geofence_id, name, center_lat, center_lng, radius_meters, is_active, created_at
       ) VALUES (
@@ -59,7 +60,8 @@ class GeofenceLocalDataSourceImpl implements GeofenceLocalDataSource {
   @override
   Future<void> setGeofenceActiveStatus(String geofenceId, bool isActive) async {
     final cleanId = geofenceId.replaceAll("'", "''");
-    final sql = '''
+    final sql =
+        '''
       UPDATE geofences
       SET is_active = $isActive
       WHERE geofence_id = '$cleanId';
@@ -74,7 +76,8 @@ class GeofenceLocalDataSourceImpl implements GeofenceLocalDataSource {
     final geofenceMaps = await dbClient.query(geofenceSql);
     if (geofenceMaps.isEmpty) return {};
 
-    const vehicleSql = "SELECT vehicle_id, last_latitude, last_longitude FROM vehicles WHERE last_seen_at >= (now() - INTERVAL 5 MINUTE);";
+    const vehicleSql =
+        "SELECT vehicle_id, last_latitude, last_longitude FROM vehicles WHERE last_seen_at >= (now() - INTERVAL 5 MINUTE);";
     final vehicleMaps = await dbClient.query(vehicleSql);
 
     final result = <String, int>{};
@@ -100,7 +103,13 @@ class GeofenceLocalDataSourceImpl implements GeofenceLocalDataSource {
     return result;
   }
 
-  bool _isWithinRadius(double lat1, double lng1, double lat2, double lng2, double radiusMeters) {
+  bool _isWithinRadius(
+    double lat1,
+    double lng1,
+    double lat2,
+    double lng2,
+    double radiusMeters,
+  ) {
     // Distance check helper
     final dLat = (lat2 - lat1) * 111000.0;
     final dLng = (lng2 - lng1) * 111000.0 * 0.8; // Approximate scaling

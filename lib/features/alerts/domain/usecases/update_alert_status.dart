@@ -18,7 +18,8 @@ class UpdateAlertStatusParams extends Equatable {
   List<Object?> get props => [alertId, status, dismissalReason];
 }
 
-class UpdateAlertStatusUseCase implements UseCase<void, UpdateAlertStatusParams> {
+class UpdateAlertStatusUseCase
+    implements UseCase<void, UpdateAlertStatusParams> {
   final AlertRepository repository;
 
   UpdateAlertStatusUseCase(this.repository);

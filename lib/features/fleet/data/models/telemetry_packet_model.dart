@@ -34,7 +34,8 @@ class TelemetryPacketModel extends TelemetryPacket {
       odometerKm: (map['odometer_km'] as num).toDouble(),
       ignition: (map['ignition'] is bool)
           ? map['ignition'] as bool
-          : (map['ignition'].toString() == '1' || map['ignition'].toString() == 'true'),
+          : (map['ignition'].toString() == '1' ||
+                map['ignition'].toString() == 'true'),
       gpsAccuracy: map['gps_accuracy'] != null
           ? (map['gps_accuracy'] as num).toDouble()
           : 5.0,

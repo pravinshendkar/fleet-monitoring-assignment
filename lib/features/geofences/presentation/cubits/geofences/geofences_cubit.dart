@@ -83,7 +83,9 @@ class GeofencesCubit extends Cubit<GeofencesState> {
 
   Future<void> deactivateGeofence(String geofenceId) async {
     try {
-      await deactivateGeofenceUseCase(DeactivateGeofenceParams(geofenceId: geofenceId, isActive: false));
+      await deactivateGeofenceUseCase(
+        DeactivateGeofenceParams(geofenceId: geofenceId, isActive: false),
+      );
       await loadGeofences();
     } catch (e) {
       emit(GeofencesError('Failed to deactivate geofence: ${e.toString()}'));

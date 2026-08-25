@@ -32,13 +32,19 @@ class VehicleDetailCubit extends Cubit<VehicleDetailState> {
     try {
       final details = await getVehicleDetailsUseCase(vehicleId);
       if (details.vehicle == null && details.telemetryHistory.isEmpty) {
-        emit(VehicleDetailError('Vehicle "$vehicleId" not found in DuckDB database.'));
+        emit(
+          VehicleDetailError(
+            'Vehicle "$vehicleId" not found in DuckDB database.',
+          ),
+        );
         return;
       }
 
       emit(VehicleDetailLoaded(details));
     } catch (e) {
-      emit(VehicleDetailError('Failed to load vehicle details: ${e.toString()}'));
+      emit(
+        VehicleDetailError('Failed to load vehicle details: ${e.toString()}'),
+      );
     }
   }
 

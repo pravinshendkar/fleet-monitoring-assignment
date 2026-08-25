@@ -8,10 +8,7 @@ class TripRepositoryImpl implements TripRepository {
   final TripLocalDataSource localDataSource;
   final DatabaseEventBus eventBus;
 
-  TripRepositoryImpl({
-    required this.localDataSource,
-    required this.eventBus,
-  });
+  TripRepositoryImpl({required this.localDataSource, required this.eventBus});
 
   @override
   Future<List<Trip>> getAllTrips() async {

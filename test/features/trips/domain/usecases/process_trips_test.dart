@@ -23,7 +23,9 @@ class MockTripRepository implements TripRepository {
     for (final event in sortedEvents) {
       if (event.type == GeofenceEventType.exit) {
         final activeTripKey = tripsMap.keys.firstWhere(
-          (k) => tripsMap[k]!.vehicleId == event.vehicleId && tripsMap[k]!.status == TripStatus.ongoing,
+          (k) =>
+              tripsMap[k]!.vehicleId == event.vehicleId &&
+              tripsMap[k]!.status == TripStatus.ongoing,
           orElse: () => '',
         );
 
@@ -46,7 +48,8 @@ class MockTripRepository implements TripRepository {
           }
           // Do not create second trip
         } else {
-          final tripId = 'trip_${event.vehicleId}_${event.eventTimestamp.millisecondsSinceEpoch}';
+          final tripId =
+              'trip_${event.vehicleId}_${event.eventTimestamp.millisecondsSinceEpoch}';
           if (!tripsMap.containsKey(tripId)) {
             tripsMap[tripId] = Trip(
               id: tripId,
@@ -62,7 +65,9 @@ class MockTripRepository implements TripRepository {
         }
       } else if (event.type == GeofenceEventType.entry) {
         final activeTripKey = tripsMap.keys.firstWhere(
-          (k) => tripsMap[k]!.vehicleId == event.vehicleId && tripsMap[k]!.status == TripStatus.ongoing,
+          (k) =>
+              tripsMap[k]!.vehicleId == event.vehicleId &&
+              tripsMap[k]!.status == TripStatus.ongoing,
           orElse: () => '',
         );
 
@@ -83,7 +88,9 @@ class MockTripRepository implements TripRepository {
         } else {
           // Late ENTRY revises completion boundary of latest completed trip
           final completedTripKey = tripsMap.keys.firstWhere(
-            (k) => tripsMap[k]!.vehicleId == event.vehicleId && tripsMap[k]!.status == TripStatus.completed,
+            (k) =>
+                tripsMap[k]!.vehicleId == event.vehicleId &&
+                tripsMap[k]!.status == TripStatus.completed,
             orElse: () => '',
           );
 
@@ -118,83 +125,89 @@ void main() {
       useCase = ProcessTripsUseCase(tripRepo);
     });
 
-    test('1. Late EXIT revises existing trip start boundary without creating duplicate trip', () async {
-      final now = DateTime.now();
-      final initialExitTime = now.subtract(const Duration(minutes: 30));
+    test(
+      '1. Late EXIT revises existing trip start boundary without creating duplicate trip',
+      () async {
+        final now = DateTime.now();
+        final initialExitTime = now.subtract(const Duration(minutes: 30));
 
-      final initialExit = GeofenceEvent(
-        id: 'e1',
-        vehicleId: 'v1',
-        geofenceId: 'g1',
-        type: GeofenceEventType.exit,
-        eventTimestamp: initialExitTime,
-        packetId: 'p1',
-      );
+        final initialExit = GeofenceEvent(
+          id: 'e1',
+          vehicleId: 'v1',
+          geofenceId: 'g1',
+          type: GeofenceEventType.exit,
+          eventTimestamp: initialExitTime,
+          packetId: 'p1',
+        );
 
-      await useCase(ProcessTripsParams([initialExit]));
+        await useCase(ProcessTripsParams([initialExit]));
 
-      // Late exit arrives with an earlier timestamp (e.g. 45 mins ago)
-      final lateExitTime = now.subtract(const Duration(minutes: 45));
-      final lateExit = GeofenceEvent(
-        id: 'e1_late',
-        vehicleId: 'v1',
-        geofenceId: 'g_origin',
-        type: GeofenceEventType.exit,
-        eventTimestamp: lateExitTime,
-        packetId: 'p1_late',
-      );
+        // Late exit arrives with an earlier timestamp (e.g. 45 mins ago)
+        final lateExitTime = now.subtract(const Duration(minutes: 45));
+        final lateExit = GeofenceEvent(
+          id: 'e1_late',
+          vehicleId: 'v1',
+          geofenceId: 'g_origin',
+          type: GeofenceEventType.exit,
+          eventTimestamp: lateExitTime,
+          packetId: 'p1_late',
+        );
 
-      await useCase(ProcessTripsParams([lateExit]));
+        await useCase(ProcessTripsParams([lateExit]));
 
-      final trips = await tripRepo.getVehicleTrips('v1');
-      expect(trips.length, 1); // Zero duplicate trips created
-      expect(trips.first.startGeofenceId, 'g_origin');
-      expect(trips.first.startTime, lateExitTime);
-    });
+        final trips = await tripRepo.getVehicleTrips('v1');
+        expect(trips.length, 1); // Zero duplicate trips created
+        expect(trips.first.startGeofenceId, 'g_origin');
+        expect(trips.first.startTime, lateExitTime);
+      },
+    );
 
-    test('2. Late ENTRY revises existing trip completion boundary without creating duplicate trip', () async {
-      final now = DateTime.now();
-      final exitTime = now.subtract(const Duration(hours: 2));
-      final initialEntryTime = now.subtract(const Duration(hours: 1));
+    test(
+      '2. Late ENTRY revises existing trip completion boundary without creating duplicate trip',
+      () async {
+        final now = DateTime.now();
+        final exitTime = now.subtract(const Duration(hours: 2));
+        final initialEntryTime = now.subtract(const Duration(hours: 1));
 
-      final exitEvent = GeofenceEvent(
-        id: 'e1',
-        vehicleId: 'v1',
-        geofenceId: 'g1',
-        type: GeofenceEventType.exit,
-        eventTimestamp: exitTime,
-        packetId: 'p1',
-      );
+        final exitEvent = GeofenceEvent(
+          id: 'e1',
+          vehicleId: 'v1',
+          geofenceId: 'g1',
+          type: GeofenceEventType.exit,
+          eventTimestamp: exitTime,
+          packetId: 'p1',
+        );
 
-      final entryEvent = GeofenceEvent(
-        id: 'e2',
-        vehicleId: 'v1',
-        geofenceId: 'g2',
-        type: GeofenceEventType.entry,
-        eventTimestamp: initialEntryTime,
-        packetId: 'p2',
-      );
+        final entryEvent = GeofenceEvent(
+          id: 'e2',
+          vehicleId: 'v1',
+          geofenceId: 'g2',
+          type: GeofenceEventType.entry,
+          eventTimestamp: initialEntryTime,
+          packetId: 'p2',
+        );
 
-      await useCase(ProcessTripsParams([exitEvent, entryEvent]));
+        await useCase(ProcessTripsParams([exitEvent, entryEvent]));
 
-      // Late entry arrives updating completion boundary
-      final lateEntryTime = now.subtract(const Duration(minutes: 30));
-      final lateEntry = GeofenceEvent(
-        id: 'e2_late',
-        vehicleId: 'v1',
-        geofenceId: 'g_final',
-        type: GeofenceEventType.entry,
-        eventTimestamp: lateEntryTime,
-        packetId: 'p2_late',
-      );
+        // Late entry arrives updating completion boundary
+        final lateEntryTime = now.subtract(const Duration(minutes: 30));
+        final lateEntry = GeofenceEvent(
+          id: 'e2_late',
+          vehicleId: 'v1',
+          geofenceId: 'g_final',
+          type: GeofenceEventType.entry,
+          eventTimestamp: lateEntryTime,
+          packetId: 'p2_late',
+        );
 
-      await useCase(ProcessTripsParams([lateEntry]));
+        await useCase(ProcessTripsParams([lateEntry]));
 
-      final trips = await tripRepo.getVehicleTrips('v1');
-      expect(trips.length, 1); // Single trip maintained
-      expect(trips.first.endGeofenceId, 'g_final');
-      expect(trips.first.endTime, lateEntryTime);
-    });
+        final trips = await tripRepo.getVehicleTrips('v1');
+        expect(trips.length, 1); // Single trip maintained
+        expect(trips.first.endGeofenceId, 'g_final');
+        expect(trips.first.endTime, lateEntryTime);
+      },
+    );
 
     test('3. Duplicate late events remain strictly idempotent', () async {
       final now = DateTime.now();

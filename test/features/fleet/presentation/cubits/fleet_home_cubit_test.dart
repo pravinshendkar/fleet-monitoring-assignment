@@ -42,7 +42,11 @@ class MockVehicleRepository implements VehicleRepository {
       result = result.where((v) => v.status == statusFilter).toList();
     }
     if (searchQuery != null && searchQuery.isNotEmpty) {
-      result = result.where((v) => v.name.contains(searchQuery) || v.id.contains(searchQuery)).toList();
+      result = result
+          .where(
+            (v) => v.name.contains(searchQuery) || v.id.contains(searchQuery),
+          )
+          .toList();
     }
     return result;
   }
@@ -106,25 +110,31 @@ void main() {
       expect(cubit.state, equals(FleetHomeInitial()));
     });
 
-    test('2. loadFleetData emits Loading then Loaded with summary & vehicles', () async {
-      await cubit.loadFleetData();
+    test(
+      '2. loadFleetData emits Loading then Loaded with summary & vehicles',
+      () async {
+        await cubit.loadFleetData();
 
-      expect(cubit.state, isA<FleetHomeLoaded>());
-      final loadedState = cubit.state as FleetHomeLoaded;
-      expect(loadedState.summary.totalVehicles, 500);
-      expect(loadedState.vehicles.length, 2);
-      expect(loadedState.selectedFilter, isNull);
-    });
+        expect(cubit.state, isA<FleetHomeLoaded>());
+        final loadedState = cubit.state as FleetHomeLoaded;
+        expect(loadedState.summary.totalVehicles, 500);
+        expect(loadedState.vehicles.length, 2);
+        expect(loadedState.selectedFilter, isNull);
+      },
+    );
 
-    test('3. setFilter updates selectedFilter and queries filtered list', () async {
-      await cubit.setFilter(VehicleStatus.moving);
+    test(
+      '3. setFilter updates selectedFilter and queries filtered list',
+      () async {
+        await cubit.setFilter(VehicleStatus.moving);
 
-      expect(cubit.state, isA<FleetHomeLoaded>());
-      final loadedState = cubit.state as FleetHomeLoaded;
-      expect(loadedState.selectedFilter, VehicleStatus.moving);
-      expect(loadedState.vehicles.length, 1);
-      expect(loadedState.vehicles.first.id, 'EV-001');
-    });
+        expect(cubit.state, isA<FleetHomeLoaded>());
+        final loadedState = cubit.state as FleetHomeLoaded;
+        expect(loadedState.selectedFilter, VehicleStatus.moving);
+        expect(loadedState.vehicles.length, 1);
+        expect(loadedState.vehicles.first.id, 'EV-001');
+      },
+    );
 
     test('4. setSearchQuery filters vehicles by query', () async {
       await cubit.setSearchQuery('EV-400');
@@ -136,12 +146,15 @@ void main() {
       expect(loadedState.vehicles.first.id, 'EV-400');
     });
 
-    test('5. Empty results handled cleanly when filter matches no vehicles', () async {
-      await cubit.setFilter(VehicleStatus.idle);
+    test(
+      '5. Empty results handled cleanly when filter matches no vehicles',
+      () async {
+        await cubit.setFilter(VehicleStatus.idle);
 
-      expect(cubit.state, isA<FleetHomeLoaded>());
-      final loadedState = cubit.state as FleetHomeLoaded;
-      expect(loadedState.vehicles, isEmpty);
-    });
+        expect(cubit.state, isA<FleetHomeLoaded>());
+        final loadedState = cubit.state as FleetHomeLoaded;
+        expect(loadedState.vehicles, isEmpty);
+      },
+    );
   });
 }

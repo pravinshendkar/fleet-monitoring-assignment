@@ -36,7 +36,9 @@ class FleetHomeLoaded extends FleetHomeState {
     return FleetHomeLoaded(
       summary: summary ?? this.summary,
       vehicles: vehicles ?? this.vehicles,
-      selectedFilter: clearFilter ? null : (selectedFilter ?? this.selectedFilter),
+      selectedFilter: clearFilter
+          ? null
+          : (selectedFilter ?? this.selectedFilter),
       searchQuery: searchQuery ?? this.searchQuery,
     );
   }

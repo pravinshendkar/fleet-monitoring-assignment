@@ -33,10 +33,19 @@ class MockVehicleRepositoryViewDetail implements VehicleRepository {
 
 class FakeTelemetryRepositoryView implements TelemetryRepository {
   @override
-  Future<List<TelemetryPacket>> getSocHistory(String vehicleId, {DateTime? startTime, int limit = 100}) async => [];
+  Future<List<TelemetryPacket>> getSocHistory(
+    String vehicleId, {
+    DateTime? startTime,
+    int limit = 100,
+  }) async => [];
 
   @override
-  Future<List<TelemetryPacket>> getVehicleTelemetryHistory(String vehicleId, {DateTime? startTime, DateTime? endTime, int limit = 100}) async => [];
+  Future<List<TelemetryPacket>> getVehicleTelemetryHistory(
+    String vehicleId, {
+    DateTime? startTime,
+    DateTime? endTime,
+    int limit = 100,
+  }) async => [];
 
   @override
   Future<void> ingestBatch(List<TelemetryPacket> packets) async {}
@@ -46,10 +55,10 @@ class MockGetVehicleDetailsViewUseCase extends GetVehicleDetailsUseCase {
   VehicleDetailsResult mockResult;
 
   MockGetVehicleDetailsViewUseCase(this.mockResult)
-      : super(
-          vehicleRepository: MockVehicleRepositoryViewDetail(),
-          telemetryRepository: FakeTelemetryRepositoryView(),
-        );
+    : super(
+        vehicleRepository: MockVehicleRepositoryViewDetail(),
+        telemetryRepository: FakeTelemetryRepositoryView(),
+      );
 
   @override
   Future<VehicleDetailsResult> call(String vehicleId) async {
@@ -114,7 +123,10 @@ void main() {
         verdict: SignalVerdict.normal,
       ),
       socHistory: [
-        SocPoint(timestamp: now.subtract(const Duration(minutes: 10)), soc: 88.0),
+        SocPoint(
+          timestamp: now.subtract(const Duration(minutes: 10)),
+          soc: 88.0,
+        ),
         SocPoint(timestamp: now, soc: 85.0),
       ],
       telemetryHistory: const [],
@@ -125,44 +137,50 @@ void main() {
       getVehicleDetails = MockGetVehicleDetailsViewUseCase(mockResult);
     });
 
-    testWidgets('renders vehicle detail headers, signals, verdicts, and SOC history table', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: BlocProvider(
-            create: (context) => VehicleDetailCubit(
-              vehicleId: 'EV-101',
-              getVehicleDetailsUseCase: getVehicleDetails,
-              vehicleRepository: vehicleRepo,
+    testWidgets(
+      'renders vehicle detail headers, signals, verdicts, and SOC history table',
+      (WidgetTester tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: BlocProvider(
+              create: (context) => VehicleDetailCubit(
+                vehicleId: 'EV-101',
+                getVehicleDetailsUseCase: getVehicleDetails,
+                vehicleRepository: vehicleRepo,
+              ),
+              child: const VehicleDetailView(vehicleId: 'EV-101'),
             ),
-            child: const VehicleDetailView(vehicleId: 'EV-101'),
           ),
-        ),
-      );
+        );
 
-      await tester.pumpAndSettle();
+        await tester.pumpAndSettle();
 
-      // App bar & title
-      expect(find.text('Vehicle EV-101'), findsOneWidget);
+        // App bar & title
+        expect(find.text('Vehicle EV-101'), findsOneWidget);
 
-      // Section Headers
-      expect(find.text('SIGNAL READINGS'), findsOneWidget);
-      expect(find.text('SOC HISTORY'), findsOneWidget);
+        // Section Headers
+        expect(find.text('SIGNAL READINGS'), findsOneWidget);
+        expect(find.text('SOC HISTORY'), findsOneWidget);
 
-      // Signal labels & values
-      expect(find.text('SOC'), findsOneWidget);
-      expect(find.text('85%'), findsNWidgets(2)); // Signal value & table value
+        // Signal labels & values
+        expect(find.text('SOC'), findsOneWidget);
+        expect(
+          find.text('85%'),
+          findsNWidgets(2),
+        ); // Signal value & table value
 
-      expect(find.text('Range'), findsOneWidget);
-      expect(find.text('255 km'), findsOneWidget);
+        expect(find.text('Range'), findsOneWidget);
+        expect(find.text('255 km'), findsOneWidget);
 
-      expect(find.text('Speed'), findsOneWidget);
-      expect(find.text('42 km/h'), findsOneWidget);
+        expect(find.text('Speed'), findsOneWidget);
+        expect(find.text('42 km/h'), findsOneWidget);
 
-      expect(find.text('Battery Temp'), findsOneWidget);
-      expect(find.text('32°C'), findsOneWidget);
+        expect(find.text('Battery Temp'), findsOneWidget);
+        expect(find.text('32°C'), findsOneWidget);
 
-      // Verdict Pills
-      expect(find.text('NORMAL'), findsNWidgets(6));
-    });
+        // Verdict Pills
+        expect(find.text('NORMAL'), findsNWidgets(6));
+      },
+    );
   });
 }

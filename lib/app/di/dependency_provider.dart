@@ -11,11 +11,13 @@ class DependencyProvider extends InheritedWidget {
   });
 
   static DependencyContainer of(BuildContext context) {
-    final provider = context.dependOnInheritedWidgetOfExactType<DependencyProvider>();
+    final provider = context
+        .dependOnInheritedWidgetOfExactType<DependencyProvider>();
     assert(provider != null, 'No DependencyProvider found in context');
     return provider!.container;
   }
 
   @override
-  bool updateShouldNotify(DependencyProvider oldWidget) => container != oldWidget.container;
+  bool updateShouldNotify(DependencyProvider oldWidget) =>
+      container != oldWidget.container;
 }

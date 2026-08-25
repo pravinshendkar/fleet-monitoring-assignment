@@ -41,19 +41,28 @@ void main() {
       }
     });
 
-    test('1. SeedDataGenerator produces 500 vehicles with deterministic distribution', () {
-      final packets = SeedDataGenerator.generateSeedTelemetry(vehicleCount: 500);
-      expect(packets.length, 500);
+    test(
+      '1. SeedDataGenerator produces 500 vehicles with deterministic distribution',
+      () {
+        final packets = SeedDataGenerator.generateSeedTelemetry(
+          vehicleCount: 500,
+        );
+        expect(packets.length, 500);
 
-      final uniqueVehicles = packets.map((p) => p.vehicleId).toSet();
-      expect(uniqueVehicles.length, 500);
+        final uniqueVehicles = packets.map((p) => p.vehicleId).toSet();
+        expect(uniqueVehicles.length, 500);
 
-      final lowBatteryCount = packets.where((p) => p.batteryLevel <= 20.0).length;
-      expect(lowBatteryCount, greaterThan(0));
+        final lowBatteryCount = packets
+            .where((p) => p.batteryLevel <= 20.0)
+            .length;
+        expect(lowBatteryCount, greaterThan(0));
 
-      final overheatingCount = packets.where((p) => p.batteryTemp > 45.0).length;
-      expect(overheatingCount, greaterThan(0));
-    });
+        final overheatingCount = packets
+            .where((p) => p.batteryTemp > 45.0)
+            .length;
+        expect(overheatingCount, greaterThan(0));
+      },
+    );
 
     test('2. SeedDataService seeds DuckDB deterministically', () async {
       final telemetryDS = TelemetryLocalDataSourceImpl(dbClient: client);
@@ -63,10 +72,22 @@ void main() {
       final tripDS = TripLocalDataSourceImpl(dbClient: client);
 
       // Repositories
-      final telemetryRepo = TelemetryRepositoryImpl(localDataSource: telemetryDS, eventBus: eventBus);
-      final alertRepo = AlertRepositoryImpl(localDataSource: alertDS, eventBus: eventBus);
-      final geofenceRepo = GeofenceRepositoryImpl(localDataSource: geofenceDS, eventBus: eventBus);
-      final tripRepo = TripRepositoryImpl(localDataSource: tripDS, eventBus: eventBus);
+      final telemetryRepo = TelemetryRepositoryImpl(
+        localDataSource: telemetryDS,
+        eventBus: eventBus,
+      );
+      final alertRepo = AlertRepositoryImpl(
+        localDataSource: alertDS,
+        eventBus: eventBus,
+      );
+      final geofenceRepo = GeofenceRepositoryImpl(
+        localDataSource: geofenceDS,
+        eventBus: eventBus,
+      );
+      final tripRepo = TripRepositoryImpl(
+        localDataSource: tripDS,
+        eventBus: eventBus,
+      );
 
       // Use cases
       final evalAlerts = EvaluateAlertsUseCase(alertRepo);

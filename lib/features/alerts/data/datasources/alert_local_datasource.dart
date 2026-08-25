@@ -7,7 +7,11 @@ abstract class AlertLocalDataSource {
   Future<List<AlertModel>> getActiveAlerts();
   Future<List<AlertModel>> getVehicleAlerts(String vehicleId);
   Future<List<AlertModel>> getAllAlerts();
-  Future<void> updateAlertStatus(String alertId, AlertStatus status, {String? dismissalReason});
+  Future<void> updateAlertStatus(
+    String alertId,
+    AlertStatus status, {
+    String? dismissalReason,
+  });
   Future<void> evaluateTelemetryAlerts(List<TelemetryPacketModel> packets);
 }
 
@@ -30,7 +34,8 @@ class AlertLocalDataSourceImpl implements AlertLocalDataSource {
   @override
   Future<List<AlertModel>> getVehicleAlerts(String vehicleId) async {
     final cleanVid = vehicleId.replaceAll("'", "''");
-    final sql = '''
+    final sql =
+        '''
       SELECT * FROM alerts
       WHERE vehicle_id = '$cleanVid'
       ORDER BY created_at DESC;
@@ -50,13 +55,20 @@ class AlertLocalDataSourceImpl implements AlertLocalDataSource {
   }
 
   @override
-  Future<void> updateAlertStatus(String alertId, AlertStatus status, {String? dismissalReason}) async {
+  Future<void> updateAlertStatus(
+    String alertId,
+    AlertStatus status, {
+    String? dismissalReason,
+  }) async {
     final cleanId = alertId.replaceAll("'", "''");
     final now = DateTime.now().toUtc().toIso8601String();
 
     if (status == AlertStatus.dismissed) {
-      final cleanReason = dismissalReason != null ? "'${dismissalReason.replaceAll("'", "''")}'" : "NULL";
-      final sql = '''
+      final cleanReason = dismissalReason != null
+          ? "'${dismissalReason.replaceAll("'", "''")}'"
+          : "NULL";
+      final sql =
+          '''
         UPDATE alerts
         SET status = '${status.name}',
             updated_at = '$now',
@@ -66,7 +78,8 @@ class AlertLocalDataSourceImpl implements AlertLocalDataSource {
       ''';
       await dbClient.execute(sql);
     } else {
-      final sql = '''
+      final sql =
+          '''
         UPDATE alerts
         SET status = '${status.name}',
             updated_at = '$now',
@@ -79,7 +92,9 @@ class AlertLocalDataSourceImpl implements AlertLocalDataSource {
   }
 
   @override
-  Future<void> evaluateTelemetryAlerts(List<TelemetryPacketModel> packets) async {
+  Future<void> evaluateTelemetryAlerts(
+    List<TelemetryPacketModel> packets,
+  ) async {
     if (packets.isEmpty) return;
 
     final now = DateTime.now().toUtc().toIso8601String();
@@ -90,11 +105,16 @@ class AlertLocalDataSourceImpl implements AlertLocalDataSource {
       // 1. Low Battery Threshold Evaluation (< 20%)
       if (packet.batteryLevel <= 20.0) {
         final isCritical = packet.batteryLevel <= 10.0;
-        final alertType = isCritical ? AlertType.criticalBattery : AlertType.lowBattery;
-        final alertStatus = isCritical ? AlertStatus.escalated : AlertStatus.active;
+        final alertType = isCritical
+            ? AlertType.criticalBattery
+            : AlertType.lowBattery;
+        final alertStatus = isCritical
+            ? AlertStatus.escalated
+            : AlertStatus.active;
         final alertId = 'alert_soc_$vid';
 
-        final sql = '''
+        final sql =
+            '''
           INSERT INTO alerts (
             alert_id, vehicle_id, type, status, trigger_value, threshold, created_at, updated_at
           ) VALUES (
@@ -113,7 +133,8 @@ class AlertLocalDataSourceImpl implements AlertLocalDataSource {
       } else {
         // Condition cleared (battery > 20%): resolve alert whether active, escalated, or dismissed!
         final alertId = 'alert_soc_$vid';
-        final resolveSql = '''
+        final resolveSql =
+            '''
           UPDATE alerts
           SET status = 'resolved', updated_at = '$now'
           WHERE alert_id = '$alertId' AND status != 'resolved';
@@ -124,7 +145,8 @@ class AlertLocalDataSourceImpl implements AlertLocalDataSource {
       // 2. Overheating Threshold Evaluation (> 45°C)
       if (packet.batteryTemp > 45.0) {
         final alertId = 'alert_temp_$vid';
-        final sql = '''
+        final sql =
+            '''
           INSERT INTO alerts (
             alert_id, vehicle_id, type, status, trigger_value, threshold, created_at, updated_at
           ) VALUES (
@@ -142,7 +164,8 @@ class AlertLocalDataSourceImpl implements AlertLocalDataSource {
       } else {
         // Condition cleared (battery temp <= 45°C): resolve alert whether active or dismissed!
         final alertId = 'alert_temp_$vid';
-        final resolveSql = '''
+        final resolveSql =
+            '''
           UPDATE alerts
           SET status = 'resolved', updated_at = '$now'
           WHERE alert_id = '$alertId' AND status != 'resolved';

@@ -34,17 +34,20 @@ class SignalReading extends Equatable {
   }
 
   @override
-  List<Object?> get props => [label, displayValue, timestamp, verdict, alertMessage];
+  List<Object?> get props => [
+    label,
+    displayValue,
+    timestamp,
+    verdict,
+    alertMessage,
+  ];
 }
 
 class SocPoint extends Equatable {
   final DateTime timestamp;
   final double soc;
 
-  const SocPoint({
-    required this.timestamp,
-    required this.soc,
-  });
+  const SocPoint({required this.timestamp, required this.soc});
 
   @override
   List<Object?> get props => [timestamp, soc];

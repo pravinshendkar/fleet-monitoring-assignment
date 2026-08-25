@@ -37,12 +37,64 @@ class _FleetHomeViewState extends State<FleetHomeView> {
     super.dispose();
   }
 
+  void _navigateToTrips(BuildContext context) {
+    final container = DependencyProvider.of(context);
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => BlocProvider(
+          create: (_) => TripsCubit(
+            tripRepository: container.tripRepository,
+            vehicleRepository: container.vehicleRepository,
+            getAllTripsUseCase: container.getAllTripsUseCase,
+          ),
+          child: const TripsView(),
+        ),
+      ),
+    );
+  }
+
+  void _navigateToGeofences(BuildContext context) {
+    final container = DependencyProvider.of(context);
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => BlocProvider(
+          create: (_) => GeofencesCubit(
+            geofenceRepository: container.geofenceRepository,
+            vehicleRepository: container.vehicleRepository,
+            createGeofenceUseCase: container.createGeofenceUseCase,
+            updateGeofenceUseCase: container.updateGeofenceUseCase,
+            deactivateGeofenceUseCase: container.deactivateGeofenceUseCase,
+          ),
+          child: const GeofencesView(),
+        ),
+      ),
+    );
+  }
+
+  void _navigateToAlerts(BuildContext context) {
+    final container = DependencyProvider.of(context);
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => BlocProvider(
+          create: (_) => AlertsCubit(
+            alertRepository: container.alertRepository,
+            vehicleRepository: container.vehicleRepository,
+            updateAlertStatusUseCase: container.updateAlertStatusUseCase,
+            undoAlertDismissalUseCase: container.undoAlertDismissalUseCase,
+          ),
+          child: const AlertsView(),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
         title: const Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.directions_car_filled, color: Colors.blue),
             SizedBox(width: 8),
@@ -54,68 +106,47 @@ class _FleetHomeViewState extends State<FleetHomeView> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.route_outlined),
-            tooltip: 'Trips',
-            onPressed: () {
-              final container = DependencyProvider.of(context);
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => BlocProvider(
-                    create: (_) => TripsCubit(
-                      tripRepository: container.tripRepository,
-                      vehicleRepository: container.vehicleRepository,
-                      getAllTripsUseCase: container.getAllTripsUseCase,
-                    ),
-                    child: const TripsView(),
-                  ),
-                ),
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.map_outlined),
-            tooltip: 'Geofences',
-            onPressed: () {
-              final container = DependencyProvider.of(context);
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => BlocProvider(
-                    create: (_) => GeofencesCubit(
-                      geofenceRepository: container.geofenceRepository,
-                      vehicleRepository: container.vehicleRepository,
-                      createGeofenceUseCase: container.createGeofenceUseCase,
-                      updateGeofenceUseCase: container.updateGeofenceUseCase,
-                      deactivateGeofenceUseCase: container.deactivateGeofenceUseCase,
-                    ),
-                    child: const GeofencesView(),
-                  ),
-                ),
-              );
-            },
-          ),
-          IconButton(
             icon: const Icon(Icons.notifications_none_outlined),
             tooltip: 'Alerts',
-            onPressed: () {
-              final container = DependencyProvider.of(context);
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => BlocProvider(
-                    create: (_) => AlertsCubit(
-                      alertRepository: container.alertRepository,
-                      vehicleRepository: container.vehicleRepository,
-                      updateAlertStatusUseCase: container.updateAlertStatusUseCase,
-                      undoAlertDismissalUseCase: container.undoAlertDismissalUseCase,
-                    ),
-                    child: const AlertsView(),
-                  ),
-                ),
-              );
-            },
+            onPressed: () => _navigateToAlerts(context),
           ),
           IconButton(
             icon: const Icon(Icons.refresh),
+            tooltip: 'Refresh',
             onPressed: () => context.read<FleetHomeCubit>().refresh(),
+          ),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            tooltip: 'Navigation Menu',
+            onSelected: (value) {
+              if (value == 'trips') {
+                _navigateToTrips(context);
+              } else if (value == 'geofences') {
+                _navigateToGeofences(context);
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem<String>(
+                value: 'trips',
+                child: Row(
+                  children: [
+                    Icon(Icons.route_outlined, size: 20),
+                    SizedBox(width: 12),
+                    Text('Trips'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem<String>(
+                value: 'geofences',
+                child: Row(
+                  children: [
+                    Icon(Icons.map_outlined, size: 20),
+                    SizedBox(width: 12),
+                    Text('Geofences'),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
         elevation: 0.5,
@@ -143,7 +174,10 @@ class _FleetHomeViewState extends State<FleetHomeView> {
                             },
                           )
                         : null,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
+                    contentPadding: const EdgeInsets.symmetric(
+                      vertical: 0,
+                      horizontal: 12,
+                    ),
                     filled: true,
                     fillColor: Colors.grey[100],
                     border: OutlineInputBorder(
@@ -187,7 +221,9 @@ class _FleetHomeViewState extends State<FleetHomeView> {
                             isSelected: currentFilter == VehicleStatus.moving,
                             color: Colors.green,
                             onSelected: (_) {
-                              context.read<FleetHomeCubit>().setFilter(VehicleStatus.moving);
+                              context.read<FleetHomeCubit>().setFilter(
+                                VehicleStatus.moving,
+                              );
                             },
                           ),
                           const SizedBox(width: 8),
@@ -197,7 +233,9 @@ class _FleetHomeViewState extends State<FleetHomeView> {
                             isSelected: currentFilter == VehicleStatus.idle,
                             color: Colors.orange,
                             onSelected: (_) {
-                              context.read<FleetHomeCubit>().setFilter(VehicleStatus.idle);
+                              context.read<FleetHomeCubit>().setFilter(
+                                VehicleStatus.idle,
+                              );
                             },
                           ),
                           const SizedBox(width: 8),
@@ -207,7 +245,9 @@ class _FleetHomeViewState extends State<FleetHomeView> {
                             isSelected: currentFilter == VehicleStatus.stopped,
                             color: Colors.blueGrey,
                             onSelected: (_) {
-                              context.read<FleetHomeCubit>().setFilter(VehicleStatus.stopped);
+                              context.read<FleetHomeCubit>().setFilter(
+                                VehicleStatus.stopped,
+                              );
                             },
                           ),
                           const SizedBox(width: 8),
@@ -217,7 +257,9 @@ class _FleetHomeViewState extends State<FleetHomeView> {
                             isSelected: currentFilter == VehicleStatus.offline,
                             color: Colors.red,
                             onSelected: (_) {
-                              context.read<FleetHomeCubit>().setFilter(VehicleStatus.offline);
+                              context.read<FleetHomeCubit>().setFilter(
+                                VehicleStatus.offline,
+                              );
                             },
                           ),
                         ],
@@ -234,9 +276,7 @@ class _FleetHomeViewState extends State<FleetHomeView> {
             child: BlocBuilder<FleetHomeCubit, FleetHomeState>(
               builder: (context, state) {
                 if (state is FleetHomeLoading) {
-                  return const Center(
-                    child: CircularProgressIndicator(),
-                  );
+                  return const Center(child: CircularProgressIndicator());
                 }
 
                 if (state is FleetHomeError) {
@@ -246,7 +286,11 @@ class _FleetHomeViewState extends State<FleetHomeView> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                          const Icon(
+                            Icons.error_outline,
+                            color: Colors.red,
+                            size: 48,
+                          ),
                           const SizedBox(height: 12),
                           Text(
                             state.message,
@@ -255,7 +299,8 @@ class _FleetHomeViewState extends State<FleetHomeView> {
                           ),
                           const SizedBox(height: 16),
                           ElevatedButton.icon(
-                            onPressed: () => context.read<FleetHomeCubit>().refresh(),
+                            onPressed: () =>
+                                context.read<FleetHomeCubit>().refresh(),
                             icon: const Icon(Icons.refresh),
                             label: const Text('Retry'),
                           ),
@@ -284,8 +329,10 @@ class _FleetHomeViewState extends State<FleetHomeView> {
                               builder: (_) => BlocProvider(
                                 create: (_) => VehicleDetailCubit(
                                   vehicleId: vehicle.id,
-                                  getVehicleDetailsUseCase: container.getVehicleDetailsUseCase,
-                                  vehicleRepository: container.vehicleRepository,
+                                  getVehicleDetailsUseCase:
+                                      container.getVehicleDetailsUseCase,
+                                  vehicleRepository:
+                                      container.vehicleRepository,
                                 ),
                                 child: VehicleDetailView(vehicleId: vehicle.id),
                               ),
@@ -333,7 +380,9 @@ class _FleetHomeViewState extends State<FleetHomeView> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: isSelected ? Colors.white.withValues(alpha: 0.25) : activeColor.withValues(alpha: 0.12),
+              color: isSelected
+                  ? Colors.white.withValues(alpha: 0.25)
+                  : activeColor.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Text(

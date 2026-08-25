@@ -70,40 +70,43 @@ void main() {
       getVehicles = GetVehiclesUseCase(vehicleRepo);
     });
 
-    testWidgets('renders header, live count chips, search bar, and vehicle card', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: BlocProvider(
-            create: (context) => FleetHomeCubit(
-              getFleetSummaryUseCase: getFleetSummary,
-              getVehiclesUseCase: getVehicles,
-              vehicleRepository: vehicleRepo,
+    testWidgets(
+      'renders header, live count chips, search bar, and vehicle card',
+      (WidgetTester tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: BlocProvider(
+              create: (context) => FleetHomeCubit(
+                getFleetSummaryUseCase: getFleetSummary,
+                getVehiclesUseCase: getVehicles,
+                vehicleRepository: vehicleRepo,
+              ),
+              child: const FleetHomeView(),
             ),
-            child: const FleetHomeView(),
           ),
-        ),
-      );
+        );
 
-      await tester.pumpAndSettle();
+        await tester.pumpAndSettle();
 
-      // App bar & Title
-      expect(find.text('Fleet Console'), findsOneWidget);
+        // App bar & Title
+        expect(find.text('Fleet Console'), findsOneWidget);
 
-      // Filter chips
-      expect(find.text('All'), findsOneWidget);
-      expect(find.text('Moving'), findsOneWidget);
-      expect(find.text('Idle'), findsOneWidget);
-      expect(find.text('Stopped'), findsOneWidget);
-      expect(find.text('Offline'), findsOneWidget);
+        // Filter chips
+        expect(find.text('All'), findsOneWidget);
+        expect(find.text('Moving'), findsOneWidget);
+        expect(find.text('Idle'), findsOneWidget);
+        expect(find.text('Stopped'), findsOneWidget);
+        expect(find.text('Offline'), findsOneWidget);
 
-      // Counts
-      expect(find.text('500'), findsOneWidget);
+        // Counts
+        expect(find.text('500'), findsOneWidget);
 
-      // Vehicle card
-      expect(find.text('EV-001'), findsOneWidget);
-      expect(find.text('ID: EV-001'), findsOneWidget);
-      expect(find.text('MOVING'), findsOneWidget);
-      expect(find.text('85%'), findsOneWidget);
-    });
+        // Vehicle card
+        expect(find.text('EV-001'), findsOneWidget);
+        expect(find.text('ID: EV-001'), findsOneWidget);
+        expect(find.text('MOVING'), findsOneWidget);
+        expect(find.text('85%'), findsOneWidget);
+      },
+    );
   });
 }

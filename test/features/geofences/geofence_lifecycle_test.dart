@@ -37,7 +37,10 @@ void main() {
       eventBus = DatabaseEventBus();
       geofenceDS = GeofenceLocalDataSourceImpl(dbClient: dbClient);
       telemetryDS = TelemetryLocalDataSourceImpl(dbClient: dbClient);
-      geofenceRepo = GeofenceRepositoryImpl(localDataSource: geofenceDS, eventBus: eventBus);
+      geofenceRepo = GeofenceRepositoryImpl(
+        localDataSource: geofenceDS,
+        eventBus: eventBus,
+      );
 
       createGeofence = CreateGeofenceUseCase(geofenceRepo);
       updateGeofence = UpdateGeofenceUseCase(geofenceRepo);
@@ -54,187 +57,213 @@ void main() {
       }
     });
 
-    test('1. Geofence CRUD & persistence in DuckDB with input validation', () async {
-      final g = Geofence(
-        id: 'geo_1',
-        name: 'Bangalore Depot',
-        centerLat: 12.9716,
-        centerLng: 77.5946,
-        radiusMeters: 500.0,
-        isActive: true,
-        createdAt: now,
-      );
+    test(
+      '1. Geofence CRUD & persistence in DuckDB with input validation',
+      () async {
+        final g = Geofence(
+          id: 'geo_1',
+          name: 'Bangalore Depot',
+          centerLat: 12.9716,
+          centerLng: 77.5946,
+          radiusMeters: 500.0,
+          isActive: true,
+          createdAt: now,
+        );
 
-      // Validation check
-      final invalidG = g.copyWith(name: '');
-      expect(() => createGeofence(invalidG), throwsArgumentError);
+        // Validation check
+        final invalidG = g.copyWith(name: '');
+        expect(() => createGeofence(invalidG), throwsArgumentError);
 
-      await createGeofence(g);
+        await createGeofence(g);
 
-      final list = await geofenceRepo.getGeofences();
-      expect(list.length, 1);
-      expect(list.first.name, 'Bangalore Depot');
+        final list = await geofenceRepo.getGeofences();
+        expect(list.length, 1);
+        expect(list.first.name, 'Bangalore Depot');
 
-      // Edit geofence
-      final updated = g.copyWith(name: 'Updated Bangalore Hub', radiusMeters: 750.0);
-      await updateGeofence(updated);
+        // Edit geofence
+        final updated = g.copyWith(
+          name: 'Updated Bangalore Hub',
+          radiusMeters: 750.0,
+        );
+        await updateGeofence(updated);
 
-      final listAfterUpdate = await geofenceRepo.getGeofences();
-      expect(listAfterUpdate.first.name, 'Updated Bangalore Hub');
-      expect(listAfterUpdate.first.radiusMeters, 750.0);
+        final listAfterUpdate = await geofenceRepo.getGeofences();
+        expect(listAfterUpdate.first.name, 'Updated Bangalore Hub');
+        expect(listAfterUpdate.first.radiusMeters, 750.0);
 
-      // Deactivate geofence
-      await deactivateGeofence(const DeactivateGeofenceParams(geofenceId: 'geo_1', isActive: false));
-      final listAfterDeactivate = await geofenceRepo.getGeofences();
-      expect(listAfterDeactivate.first.isActive, isFalse);
-    });
+        // Deactivate geofence
+        await deactivateGeofence(
+          const DeactivateGeofenceParams(geofenceId: 'geo_1', isActive: false),
+        );
+        final listAfterDeactivate = await geofenceRepo.getGeofences();
+        expect(listAfterDeactivate.first.isActive, isFalse);
+      },
+    );
 
-    test('2. Confirmed ENTRY and EXIT requiring 2 consecutive readings', () async {
-      final g = Geofence(
-        id: 'geo_1',
-        name: 'Depot A',
-        centerLat: 12.9716,
-        centerLng: 77.5946,
-        radiusMeters: 500.0,
-        isActive: true,
-        createdAt: now,
-      );
-      await createGeofence(g);
+    test(
+      '2. Confirmed ENTRY and EXIT requiring 2 consecutive readings',
+      () async {
+        final g = Geofence(
+          id: 'geo_1',
+          name: 'Depot A',
+          centerLat: 12.9716,
+          centerLng: 77.5946,
+          radiusMeters: 500.0,
+          isActive: true,
+          createdAt: now,
+        );
+        await createGeofence(g);
 
-      final p1 = TelemetryPacket(
-        packetId: 'p1',
-        vehicleId: 'EV-101',
-        eventTimestamp: now.subtract(const Duration(minutes: 5)),
-        ingestTimestamp: now,
-        latitude: 12.9716,
-        longitude: 77.5946,
-        speed: 10.0,
-        batteryLevel: 80.0,
-        batteryTemp: 30.0,
-        odometerKm: 100.0,
-        ignition: true,
-        gpsAccuracy: 5.0,
-      );
+        final p1 = TelemetryPacket(
+          packetId: 'p1',
+          vehicleId: 'EV-101',
+          eventTimestamp: now.subtract(const Duration(minutes: 5)),
+          ingestTimestamp: now,
+          latitude: 12.9716,
+          longitude: 77.5946,
+          speed: 10.0,
+          batteryLevel: 80.0,
+          batteryTemp: 30.0,
+          odometerKm: 100.0,
+          ignition: true,
+          gpsAccuracy: 5.0,
+        );
 
-      final p2 = TelemetryPacket(
-        packetId: 'p2',
-        vehicleId: 'EV-101',
-        eventTimestamp: now.subtract(const Duration(minutes: 4)),
-        ingestTimestamp: now,
-        latitude: 12.9716,
-        longitude: 77.5946,
-        speed: 10.0,
-        batteryLevel: 80.0,
-        batteryTemp: 30.0,
-        odometerKm: 100.1,
-        ignition: true,
-        gpsAccuracy: 5.0,
-      );
+        final p2 = TelemetryPacket(
+          packetId: 'p2',
+          vehicleId: 'EV-101',
+          eventTimestamp: now.subtract(const Duration(minutes: 4)),
+          ingestTimestamp: now,
+          latitude: 12.9716,
+          longitude: 77.5946,
+          speed: 10.0,
+          batteryLevel: 80.0,
+          batteryTemp: 30.0,
+          odometerKm: 100.1,
+          ignition: true,
+          gpsAccuracy: 5.0,
+        );
 
-      final events = await detectTransitions(DetectGeofenceTransitionsParams(
-        packets: [p1, p2],
-        activeVehicleGeofences: {},
-      ));
+        final events = await detectTransitions(
+          DetectGeofenceTransitionsParams(
+            packets: [p1, p2],
+            activeVehicleGeofences: {},
+          ),
+        );
 
-      expect(events.length, 1);
-      expect(events.first.type, GeofenceEventType.entry);
-      expect(events.first.geofenceId, 'geo_1');
-    });
+        expect(events.length, 1);
+        expect(events.first.type, GeofenceEventType.entry);
+        expect(events.first.geofenceId, 'geo_1');
+      },
+    );
 
-    test('3. Overlapping geofences tracked independently per (vehicle_id, geofence_id)', () async {
-      final g1 = Geofence(
-        id: 'geo_1',
-        name: 'Hub A',
-        centerLat: 12.9716,
-        centerLng: 77.5946,
-        radiusMeters: 1000.0,
-        isActive: true,
-        createdAt: now,
-      );
-      final g2 = Geofence(
-        id: 'geo_2',
-        name: 'Hub B',
-        centerLat: 12.9720,
-        centerLng: 77.5950,
-        radiusMeters: 1000.0,
-        isActive: true,
-        createdAt: now,
-      );
+    test(
+      '3. Overlapping geofences tracked independently per (vehicle_id, geofence_id)',
+      () async {
+        final g1 = Geofence(
+          id: 'geo_1',
+          name: 'Hub A',
+          centerLat: 12.9716,
+          centerLng: 77.5946,
+          radiusMeters: 1000.0,
+          isActive: true,
+          createdAt: now,
+        );
+        final g2 = Geofence(
+          id: 'geo_2',
+          name: 'Hub B',
+          centerLat: 12.9720,
+          centerLng: 77.5950,
+          radiusMeters: 1000.0,
+          isActive: true,
+          createdAt: now,
+        );
 
-      await createGeofence(g1);
-      await createGeofence(g2);
+        await createGeofence(g1);
+        await createGeofence(g2);
 
-      final p1 = TelemetryPacket(
-        packetId: 'p1',
-        vehicleId: 'EV-101',
-        eventTimestamp: now.subtract(const Duration(minutes: 2)),
-        ingestTimestamp: now,
-        latitude: 12.9716,
-        longitude: 77.5946,
-        speed: 0.0,
-        batteryLevel: 90.0,
-        batteryTemp: 30.0,
-        odometerKm: 100.0,
-        ignition: true,
-        gpsAccuracy: 5.0,
-      );
+        final p1 = TelemetryPacket(
+          packetId: 'p1',
+          vehicleId: 'EV-101',
+          eventTimestamp: now.subtract(const Duration(minutes: 2)),
+          ingestTimestamp: now,
+          latitude: 12.9716,
+          longitude: 77.5946,
+          speed: 0.0,
+          batteryLevel: 90.0,
+          batteryTemp: 30.0,
+          odometerKm: 100.0,
+          ignition: true,
+          gpsAccuracy: 5.0,
+        );
 
-      final p2 = TelemetryPacket(
-        packetId: 'p2',
-        vehicleId: 'EV-101',
-        eventTimestamp: now.subtract(const Duration(minutes: 1)),
-        ingestTimestamp: now,
-        latitude: 12.9716,
-        longitude: 77.5946,
-        speed: 0.0,
-        batteryLevel: 90.0,
-        batteryTemp: 30.0,
-        odometerKm: 100.0,
-        ignition: true,
-        gpsAccuracy: 5.0,
-      );
+        final p2 = TelemetryPacket(
+          packetId: 'p2',
+          vehicleId: 'EV-101',
+          eventTimestamp: now.subtract(const Duration(minutes: 1)),
+          ingestTimestamp: now,
+          latitude: 12.9716,
+          longitude: 77.5946,
+          speed: 0.0,
+          batteryLevel: 90.0,
+          batteryTemp: 30.0,
+          odometerKm: 100.0,
+          ignition: true,
+          gpsAccuracy: 5.0,
+        );
 
-      final events = await detectTransitions(DetectGeofenceTransitionsParams(
-        packets: [p1, p2],
-        activeVehicleGeofences: {},
-      ));
+        final events = await detectTransitions(
+          DetectGeofenceTransitionsParams(
+            packets: [p1, p2],
+            activeVehicleGeofences: {},
+          ),
+        );
 
-      expect(events.length, 2); // Triggers ENTRY for BOTH overlapping geofences independently!
-      expect(events.any((e) => e.geofenceId == 'geo_1'), isTrue);
-      expect(events.any((e) => e.geofenceId == 'geo_2'), isTrue);
-    });
+        expect(
+          events.length,
+          2,
+        ); // Triggers ENTRY for BOTH overlapping geofences independently!
+        expect(events.any((e) => e.geofenceId == 'geo_1'), isTrue);
+        expect(events.any((e) => e.geofenceId == 'geo_2'), isTrue);
+      },
+    );
 
-    test('4. SQL vehicle counts calculate active vehicles inside geofences dynamically', () async {
-      final g1 = Geofence(
-        id: 'geo_1',
-        name: 'Depot Central',
-        centerLat: 12.9716,
-        centerLng: 77.5946,
-        radiusMeters: 500.0,
-        isActive: true,
-        createdAt: now,
-      );
-      await createGeofence(g1);
+    test(
+      '4. SQL vehicle counts calculate active vehicles inside geofences dynamically',
+      () async {
+        final g1 = Geofence(
+          id: 'geo_1',
+          name: 'Depot Central',
+          centerLat: 12.9716,
+          centerLng: 77.5946,
+          radiusMeters: 500.0,
+          isActive: true,
+          createdAt: now,
+        );
+        await createGeofence(g1);
 
-      final p1 = TelemetryPacket(
-        packetId: 'p1',
-        vehicleId: 'EV-101',
-        eventTimestamp: now,
-        ingestTimestamp: now,
-        latitude: 12.9716,
-        longitude: 77.5946,
-        speed: 0.0,
-        batteryLevel: 90.0,
-        batteryTemp: 30.0,
-        odometerKm: 100.0,
-        ignition: true,
-        gpsAccuracy: 5.0,
-      );
+        final p1 = TelemetryPacket(
+          packetId: 'p1',
+          vehicleId: 'EV-101',
+          eventTimestamp: now,
+          ingestTimestamp: now,
+          latitude: 12.9716,
+          longitude: 77.5946,
+          speed: 0.0,
+          batteryLevel: 90.0,
+          batteryTemp: 30.0,
+          odometerKm: 100.0,
+          ignition: true,
+          gpsAccuracy: 5.0,
+        );
 
-      await telemetryDS.insertTelemetryBatch([TelemetryPacketModel.fromEntity(p1)]);
+        await telemetryDS.insertTelemetryBatch([
+          TelemetryPacketModel.fromEntity(p1),
+        ]);
 
-      final counts = await geofenceRepo.getGeofenceVehicleCounts();
-      expect(counts['geo_1'], 1);
-    });
+        final counts = await geofenceRepo.getGeofenceVehicleCounts();
+        expect(counts['geo_1'], 1);
+      },
+    );
   });
 }

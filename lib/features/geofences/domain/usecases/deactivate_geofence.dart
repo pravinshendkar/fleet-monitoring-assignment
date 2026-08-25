@@ -15,13 +15,17 @@ class DeactivateGeofenceParams extends Equatable {
   List<Object?> get props => [geofenceId, isActive];
 }
 
-class DeactivateGeofenceUseCase implements UseCase<void, DeactivateGeofenceParams> {
+class DeactivateGeofenceUseCase
+    implements UseCase<void, DeactivateGeofenceParams> {
   final GeofenceRepository repository;
 
   DeactivateGeofenceUseCase(this.repository);
 
   @override
   Future<void> call(DeactivateGeofenceParams params) async {
-    await repository.setGeofenceActiveStatus(params.geofenceId, params.isActive);
+    await repository.setGeofenceActiveStatus(
+      params.geofenceId,
+      params.isActive,
+    );
   }
 }

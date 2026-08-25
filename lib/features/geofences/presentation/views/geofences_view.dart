@@ -28,10 +28,7 @@ class _GeofencesViewState extends State<GeofencesView> {
           children: [
             Icon(Icons.map, color: Colors.blue),
             SizedBox(width: 8),
-            Text(
-              'Geofences',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
+            Text('Geofences', style: TextStyle(fontWeight: FontWeight.bold)),
           ],
         ),
         actions: [
@@ -60,12 +57,17 @@ class _GeofencesViewState extends State<GeofencesView> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                    const Icon(
+                      Icons.error_outline,
+                      color: Colors.red,
+                      size: 48,
+                    ),
                     const SizedBox(height: 12),
                     Text(state.message, textAlign: TextAlign.center),
                     const SizedBox(height: 16),
                     ElevatedButton.icon(
-                      onPressed: () => context.read<GeofencesCubit>().loadGeofences(),
+                      onPressed: () =>
+                          context.read<GeofencesCubit>().loadGeofences(),
                       icon: const Icon(Icons.refresh),
                       label: const Text('Retry'),
                     ),
@@ -108,7 +110,9 @@ class _GeofencesViewState extends State<GeofencesView> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: geofence.isActive ? Colors.blue.withValues(alpha: 0.3) : Colors.grey.withValues(alpha: 0.2),
+          color: geofence.isActive
+              ? Colors.blue.withValues(alpha: 0.3)
+              : Colors.grey.withValues(alpha: 0.2),
         ),
       ),
       child: Padding(
@@ -124,7 +128,9 @@ class _GeofencesViewState extends State<GeofencesView> {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: geofence.isActive ? Colors.blue.withValues(alpha: 0.1) : Colors.grey.withValues(alpha: 0.1),
+                        color: geofence.isActive
+                            ? Colors.blue.withValues(alpha: 0.1)
+                            : Colors.grey.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
@@ -146,7 +152,10 @@ class _GeofencesViewState extends State<GeofencesView> {
                         ),
                         Text(
                           'ID: ${geofence.id}',
-                          style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                          ),
                         ),
                       ],
                     ),
@@ -187,14 +196,21 @@ class _GeofencesViewState extends State<GeofencesView> {
               children: [
                 // SQL Live Vehicle Count Chip
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.blue.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.directions_car, size: 14, color: Colors.blue),
+                      const Icon(
+                        Icons.directions_car,
+                        size: 14,
+                        color: Colors.blue,
+                      ),
                       const SizedBox(width: 6),
                       Text(
                         '${geofence.activeVehicleCount} vehicles inside',
@@ -217,7 +233,11 @@ class _GeofencesViewState extends State<GeofencesView> {
                     ),
                     if (geofence.isActive)
                       IconButton(
-                        icon: const Icon(Icons.block, size: 20, color: Colors.red),
+                        icon: const Icon(
+                          Icons.block,
+                          size: 20,
+                          color: Colors.red,
+                        ),
                         tooltip: 'Deactivate Geofence',
                         onPressed: () => _confirmDeactivate(context, geofence),
                       ),
@@ -235,7 +255,9 @@ class _GeofencesViewState extends State<GeofencesView> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: isActive ? Colors.green.withValues(alpha: 0.12) : Colors.grey.withValues(alpha: 0.15),
+        color: isActive
+            ? Colors.green.withValues(alpha: 0.12)
+            : Colors.grey.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
@@ -284,14 +306,19 @@ class _GeofencesViewState extends State<GeofencesView> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Deactivate Geofence?'),
-        content: Text('Deactivating "${geofence.name}" will stop future transition detection for this area while preserving historical trip data.'),
+        content: Text(
+          'Deactivating "${geofence.name}" will stop future transition detection for this area while preserving historical trip data.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
             onPressed: () => Navigator.of(ctx).pop(true),
             child: const Text('Deactivate'),
           ),

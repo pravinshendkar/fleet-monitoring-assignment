@@ -9,10 +9,7 @@ import '../widgets/signal_reading_row.dart';
 class VehicleDetailView extends StatefulWidget {
   final String vehicleId;
 
-  const VehicleDetailView({
-    super.key,
-    required this.vehicleId,
-  });
+  const VehicleDetailView({super.key, required this.vehicleId});
 
   @override
   State<VehicleDetailView> createState() => _VehicleDetailViewState();
@@ -37,7 +34,8 @@ class _VehicleDetailViewState extends State<VehicleDetailView> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: () => context.read<VehicleDetailCubit>().loadVehicleDetail(),
+            onPressed: () =>
+                context.read<VehicleDetailCubit>().loadVehicleDetail(),
           ),
         ],
         elevation: 0.5,
@@ -55,7 +53,11 @@ class _VehicleDetailViewState extends State<VehicleDetailView> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                    const Icon(
+                      Icons.error_outline,
+                      color: Colors.red,
+                      size: 48,
+                    ),
                     const SizedBox(height: 12),
                     Text(
                       state.message,
@@ -64,7 +66,9 @@ class _VehicleDetailViewState extends State<VehicleDetailView> {
                     ),
                     const SizedBox(height: 16),
                     ElevatedButton.icon(
-                      onPressed: () => context.read<VehicleDetailCubit>().loadVehicleDetail(),
+                      onPressed: () => context
+                          .read<VehicleDetailCubit>()
+                          .loadVehicleDetail(),
                       icon: const Icon(Icons.refresh),
                       label: const Text('Retry'),
                     ),
@@ -102,7 +106,11 @@ class _VehicleDetailViewState extends State<VehicleDetailView> {
                                   color: Colors.blue.withValues(alpha: 0.1),
                                   shape: BoxShape.circle,
                                 ),
-                                child: const Icon(Icons.electric_car, color: Colors.blue, size: 24),
+                                child: const Icon(
+                                  Icons.electric_car,
+                                  color: Colors.blue,
+                                  size: 24,
+                                ),
                               ),
                               const SizedBox(width: 12),
                               Column(
@@ -117,7 +125,10 @@ class _VehicleDetailViewState extends State<VehicleDetailView> {
                                   ),
                                   Text(
                                     'ID: ${widget.vehicleId}',
-                                    style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 13,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -193,11 +204,16 @@ class _VehicleDetailViewState extends State<VehicleDetailView> {
                           const SizedBox(height: 12),
                           if (details.socHistory.isEmpty)
                             Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 16.0),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 16.0,
+                              ),
                               child: Center(
                                 child: Text(
                                   'No historical SOC telemetry recorded.',
-                                  style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 13,
+                                  ),
                                 ),
                               ),
                             )
@@ -250,11 +266,7 @@ class _VehicleDetailViewState extends State<VehicleDetailView> {
       ),
       child: Text(
         status.name.toUpperCase(),
-        style: TextStyle(
-          color: fg,
-          fontSize: 11,
-          fontWeight: FontWeight.bold,
-        ),
+        style: TextStyle(color: fg, fontSize: 11, fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -274,8 +286,14 @@ class _VehicleDetailViewState extends State<VehicleDetailView> {
           child: const Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Timestamp (UTC)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-              Text('Battery SOC', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+              Text(
+                'Timestamp (UTC)',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+              ),
+              Text(
+                'Battery SOC',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+              ),
             ],
           ),
         ),
@@ -287,17 +305,24 @@ class _VehicleDetailViewState extends State<VehicleDetailView> {
           separatorBuilder: (context, index) => const Divider(height: 1),
           itemBuilder: (context, index) {
             final pt = recentHistory[index];
-            final timeStr = '${pt.timestamp.hour.toString().padLeft(2, '0')}:${pt.timestamp.minute.toString().padLeft(2, '0')}:${pt.timestamp.second.toString().padLeft(2, '0')}';
+            final timeStr =
+                '${pt.timestamp.hour.toString().padLeft(2, '0')}:${pt.timestamp.minute.toString().padLeft(2, '0')}:${pt.timestamp.second.toString().padLeft(2, '0')}';
 
             return Padding(
               padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(timeStr, style: TextStyle(fontSize: 12, color: Colors.grey[700])),
+                  Text(
+                    timeStr,
+                    style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                  ),
                   Text(
                     '${pt.soc.toStringAsFixed(0)}%',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
                   ),
                 ],
               ),

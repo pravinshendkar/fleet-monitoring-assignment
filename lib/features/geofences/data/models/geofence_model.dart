@@ -21,7 +21,8 @@ class GeofenceModel extends Geofence {
       radiusMeters: (map['radius_meters'] as num).toDouble(),
       isActive: (map['is_active'] is bool)
           ? map['is_active'] as bool
-          : (map['is_active'].toString() == '1' || map['is_active'].toString() == 'true'),
+          : (map['is_active'].toString() == '1' ||
+                map['is_active'].toString() == 'true'),
       createdAt: map['created_at'] is DateTime
           ? map['created_at'] as DateTime
           : DateTime.parse(map['created_at'].toString()),

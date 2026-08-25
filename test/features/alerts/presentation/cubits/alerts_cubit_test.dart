@@ -23,10 +23,17 @@ class MockAlertRepositoryPresentation implements AlertRepository {
   Future<List<Alert>> getAllAlerts() async => allList;
 
   @override
-  Future<void> updateAlertStatus(String alertId, AlertStatus status, {String? dismissalReason}) async {
+  Future<void> updateAlertStatus(
+    String alertId,
+    AlertStatus status, {
+    String? dismissalReason,
+  }) async {
     final idx = allList.indexWhere((a) => a.id == alertId);
     if (idx != -1) {
-      allList[idx] = allList[idx].copyWith(status: status, dismissalReason: dismissalReason);
+      allList[idx] = allList[idx].copyWith(
+        status: status,
+        dismissalReason: dismissalReason,
+      );
     }
     if (status == AlertStatus.dismissed) {
       activeList.removeWhere((a) => a.id == alertId);
@@ -106,15 +113,18 @@ void main() {
       expect(cubit.state, equals(AlertsInitial()));
     });
 
-    test('2. loadAlerts emits Loading then Loaded with active & all alerts', () async {
-      await cubit.loadAlerts();
+    test(
+      '2. loadAlerts emits Loading then Loaded with active & all alerts',
+      () async {
+        await cubit.loadAlerts();
 
-      expect(cubit.state, isA<AlertsLoaded>());
-      final loaded = cubit.state as AlertsLoaded;
-      expect(loaded.activeAlerts.length, 1);
-      expect(loaded.allAlerts.length, 1);
-      expect(loaded.activeAlerts.first.vehicleId, 'EV-101');
-    });
+        expect(cubit.state, isA<AlertsLoaded>());
+        final loaded = cubit.state as AlertsLoaded;
+        expect(loaded.activeAlerts.length, 1);
+        expect(loaded.allAlerts.length, 1);
+        expect(loaded.activeAlerts.first.vehicleId, 'EV-101');
+      },
+    );
 
     test('3. dismissAlert updates status and shows undo banner', () async {
       await cubit.loadAlerts();

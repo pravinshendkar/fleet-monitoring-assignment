@@ -72,32 +72,35 @@ void main() {
       getAllTripsUseCase = GetAllTripsUseCase(tripRepo);
     });
 
-    testWidgets('renders trip card with status badge, route header, and metrics grid', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: BlocProvider(
-            create: (context) => TripsCubit(
-              tripRepository: tripRepo,
-              vehicleRepository: vehicleRepo,
-              getAllTripsUseCase: getAllTripsUseCase,
+    testWidgets(
+      'renders trip card with status badge, route header, and metrics grid',
+      (WidgetTester tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: BlocProvider(
+              create: (context) => TripsCubit(
+                tripRepository: tripRepo,
+                vehicleRepository: vehicleRepo,
+                getAllTripsUseCase: getAllTripsUseCase,
+              ),
+              child: const TripsView(),
             ),
-            child: const TripsView(),
           ),
-        ),
-      );
+        );
 
-      await tester.pumpAndSettle();
+        await tester.pumpAndSettle();
 
-      // App bar & title
-      expect(find.text('Fleet Trips'), findsOneWidget);
+        // App bar & title
+        expect(find.text('Fleet Trips'), findsOneWidget);
 
-      // Trip Card content
-      expect(find.text('Vehicle: EV-101'), findsOneWidget);
-      expect(find.text('IN_PROGRESS'), findsOneWidget);
-      expect(find.text('Warehouse Depot → In Progress...'), findsOneWidget);
-      expect(find.text('8.2 km'), findsOneWidget);
-      expect(find.text('45 km/h'), findsOneWidget);
-      expect(find.text('6.0%'), findsOneWidget);
-    });
+        // Trip Card content
+        expect(find.text('Vehicle: EV-101'), findsOneWidget);
+        expect(find.text('IN_PROGRESS'), findsOneWidget);
+        expect(find.text('Warehouse Depot → In Progress...'), findsOneWidget);
+        expect(find.text('8.2 km'), findsOneWidget);
+        expect(find.text('45 km/h'), findsOneWidget);
+        expect(find.text('6.0%'), findsOneWidget);
+      },
+    );
   });
 }

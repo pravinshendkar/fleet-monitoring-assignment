@@ -19,7 +19,7 @@ class SeedDataGenerator {
 
     for (var i = 1; i <= vehicleCount; i++) {
       final vid = 'EV-${i.toString().padLeft(3, '0')}';
-      
+
       // Determine status category deterministically
       // 0..199: moving, 200..299: idle, 300..399: stopped, 400..499: offline
       final category = i % 4;
@@ -77,20 +77,22 @@ class SeedDataGenerator {
 
       final eventTimestamp = now.subtract(pingAge);
 
-      packets.add(TelemetryPacket(
-        packetId: 'pkt_seed_${vid}_${eventTimestamp.millisecondsSinceEpoch}',
-        vehicleId: vid,
-        eventTimestamp: eventTimestamp,
-        ingestTimestamp: now,
-        latitude: baseLat + latOffset,
-        longitude: baseLng + lngOffset,
-        speed: speed,
-        batteryLevel: soc,
-        batteryTemp: temp,
-        odometerKm: 5000.0 + (i * 25.0) + rng.nextInt(500),
-        ignition: ignition,
-        gpsAccuracy: 4.0 + rng.nextDouble() * 3.0,
-      ));
+      packets.add(
+        TelemetryPacket(
+          packetId: 'pkt_seed_${vid}_${eventTimestamp.millisecondsSinceEpoch}',
+          vehicleId: vid,
+          eventTimestamp: eventTimestamp,
+          ingestTimestamp: now,
+          latitude: baseLat + latOffset,
+          longitude: baseLng + lngOffset,
+          speed: speed,
+          batteryLevel: soc,
+          batteryTemp: temp,
+          odometerKm: 5000.0 + (i * 25.0) + rng.nextInt(500),
+          ignition: ignition,
+          gpsAccuracy: 4.0 + rng.nextDouble() * 3.0,
+        ),
+      );
     }
 
     return packets;

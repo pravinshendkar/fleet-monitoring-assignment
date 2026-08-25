@@ -35,14 +35,20 @@ class TripsCubit extends Cubit<TripsState> {
 
     try {
       final list = await getAllTripsUseCase(NoParams());
-      final ongoing = list.where((t) => t.status == TripStatus.ongoing).toList();
-      final completed = list.where((t) => t.status == TripStatus.completed).toList();
+      final ongoing = list
+          .where((t) => t.status == TripStatus.ongoing)
+          .toList();
+      final completed = list
+          .where((t) => t.status == TripStatus.completed)
+          .toList();
 
-      emit(TripsLoaded(
-        allTrips: list,
-        ongoingTrips: ongoing,
-        completedTrips: completed,
-      ));
+      emit(
+        TripsLoaded(
+          allTrips: list,
+          ongoingTrips: ongoing,
+          completedTrips: completed,
+        ),
+      );
     } catch (e) {
       emit(TripsError('Failed to load trips: ${e.toString()}'));
     }

@@ -35,13 +35,20 @@ class AlertsLoaded extends AlertsState {
     return AlertsLoaded(
       activeAlerts: activeAlerts ?? this.activeAlerts,
       allAlerts: allAlerts ?? this.allAlerts,
-      recentlyDismissedAlert: clearRecentlyDismissed ? null : (recentlyDismissedAlert ?? this.recentlyDismissedAlert),
+      recentlyDismissedAlert: clearRecentlyDismissed
+          ? null
+          : (recentlyDismissedAlert ?? this.recentlyDismissedAlert),
       showUndoBanner: showUndoBanner ?? this.showUndoBanner,
     );
   }
 
   @override
-  List<Object?> get props => [activeAlerts, allAlerts, recentlyDismissedAlert, showUndoBanner];
+  List<Object?> get props => [
+    activeAlerts,
+    allAlerts,
+    recentlyDismissedAlert,
+    showUndoBanner,
+  ];
 }
 
 class AlertsError extends AlertsState {

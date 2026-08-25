@@ -16,7 +16,9 @@ class SeedDataService {
 
   /// Seeds DuckDB with 500 vehicles and initial geofences if empty.
   Future<void> seedIfEmpty({int vehicleCount = 500}) async {
-    final vehicleCheck = await dbClient.query('SELECT COUNT(*) as count FROM vehicles;');
+    final vehicleCheck = await dbClient.query(
+      'SELECT COUNT(*) as count FROM vehicles;',
+    );
     final count = (vehicleCheck.first['count'] as num?)?.toInt() ?? 0;
 
     if (count == 0) {
@@ -30,7 +32,9 @@ class SeedDataService {
       final seedTelemetry = SeedDataGenerator.generateSeedTelemetry(
         vehicleCount: vehicleCount,
       );
-      await processTelemetryBatchUseCase(ProcessTelemetryBatchParams(seedTelemetry));
+      await processTelemetryBatchUseCase(
+        ProcessTelemetryBatchParams(seedTelemetry),
+      );
     }
   }
 }

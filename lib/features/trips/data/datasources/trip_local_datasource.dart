@@ -27,7 +27,8 @@ class TripLocalDataSourceImpl implements TripLocalDataSource {
   @override
   Future<List<TripModel>> getVehicleTrips(String vehicleId) async {
     final cleanVid = vehicleId.replaceAll("'", "''");
-    final sql = '''
+    final sql =
+        '''
       SELECT * FROM trips
       WHERE vehicle_id = '$cleanVid'
       ORDER BY start_time DESC;
@@ -52,7 +53,8 @@ class TripLocalDataSourceImpl implements TripLocalDataSource {
       final pid = event.packetId.replaceAll("'", "''");
 
       // 1. Idempotency Check via DuckDB geofence_events table
-      final checkEventSql = "SELECT event_id FROM geofence_events WHERE event_id = '$eid';";
+      final checkEventSql =
+          "SELECT event_id FROM geofence_events WHERE event_id = '$eid';";
       final existingEvents = await dbClient.query(checkEventSql);
       if (existingEvents.isNotEmpty) {
         // Event already processed -> strictly idempotent skip!
@@ -60,7 +62,8 @@ class TripLocalDataSourceImpl implements TripLocalDataSource {
       }
 
       // Record geofence event in DuckDB
-      final insertEventSql = '''
+      final insertEventSql =
+          '''
         INSERT INTO geofence_events (
           event_id, vehicle_id, geofence_id, event_type, event_timestamp, packet_id
         ) VALUES (
@@ -73,7 +76,8 @@ class TripLocalDataSourceImpl implements TripLocalDataSource {
       // 2. Process Trip State
       if (event.type == GeofenceEventType.exit) {
         // Check for existing active (ongoing) trip for this vehicle
-        final activeTripSql = '''
+        final activeTripSql =
+            '''
           SELECT trip_id, start_time FROM trips
           WHERE vehicle_id = '$vid' AND status = 'ongoing'
           LIMIT 1;
@@ -82,12 +86,15 @@ class TripLocalDataSourceImpl implements TripLocalDataSource {
 
         if (activeTripMaps.isNotEmpty) {
           final activeTrip = activeTripMaps.first;
-          final existingStartTs = DateTime.parse(activeTrip['start_time'].toString());
+          final existingStartTs = DateTime.parse(
+            activeTrip['start_time'].toString(),
+          );
 
           if (event.eventTimestamp.isBefore(existingStartTs)) {
             // Late EXIT event revises existing trip's start boundary
             final tripId = activeTrip['trip_id'] as String;
-            final updateSql = '''
+            final updateSql =
+                '''
               UPDATE trips
               SET start_geofence_id = '$gid',
                   start_time = '$ts'
@@ -99,8 +106,10 @@ class TripLocalDataSourceImpl implements TripLocalDataSource {
           // Active trip already exists -> do NOT create duplicate active trip
         } else {
           // No active trip: create new ongoing trip
-          final tripId = 'trip_${vid}_${event.eventTimestamp.millisecondsSinceEpoch}';
-          final sql = '''
+          final tripId =
+              'trip_${vid}_${event.eventTimestamp.millisecondsSinceEpoch}';
+          final sql =
+              '''
             INSERT INTO trips (
               trip_id, vehicle_id, start_geofence_id, start_time, distance_km, max_speed, average_soc_used, status
             ) VALUES (
@@ -113,7 +122,8 @@ class TripLocalDataSourceImpl implements TripLocalDataSource {
         }
       } else if (event.type == GeofenceEventType.entry) {
         // Check ongoing trip first
-        final ongoingTripSql = '''
+        final ongoingTripSql =
+            '''
           SELECT trip_id, start_time FROM trips
           WHERE vehicle_id = '$vid' AND status = 'ongoing'
           ORDER BY start_time DESC
@@ -126,7 +136,8 @@ class TripLocalDataSourceImpl implements TripLocalDataSource {
           final ongoingTripId = ongoingTrip['trip_id'] as String;
           final startTs = ongoingTrip['start_time'].toString();
 
-          final updateSql = '''
+          final updateSql =
+              '''
             UPDATE trips
             SET end_geofence_id = '$gid',
                 end_time = '$ts',
@@ -137,7 +148,8 @@ class TripLocalDataSourceImpl implements TripLocalDataSource {
           await _recalculateTripMetrics(ongoingTripId, vid, startTs, ts);
         } else {
           // Check if late ENTRY revises the completion boundary of the latest completed trip
-          final latestTripSql = '''
+          final latestTripSql =
+              '''
             SELECT trip_id, start_time, end_time FROM trips
             WHERE vehicle_id = '$vid' AND status = 'completed'
             ORDER BY start_time DESC
@@ -149,7 +161,8 @@ class TripLocalDataSourceImpl implements TripLocalDataSource {
             final latestTripId = latestTrip['trip_id'] as String;
             final startTs = latestTrip['start_time'].toString();
 
-            final updateSql = '''
+            final updateSql =
+                '''
               UPDATE trips
               SET end_geofence_id = '$gid',
                   end_time = '$ts'
@@ -169,8 +182,11 @@ class TripLocalDataSourceImpl implements TripLocalDataSource {
     String startTimeStr,
     String? endTimeStr,
   ) async {
-    final endTimeClause = endTimeStr != null ? "AND event_timestamp <= '$endTimeStr'" : "";
-    final sql = '''
+    final endTimeClause = endTimeStr != null
+        ? "AND event_timestamp <= '$endTimeStr'"
+        : "";
+    final sql =
+        '''
       SELECT latitude, longitude, speed, battery_level
       FROM telemetry_packets
       WHERE vehicle_id = '$vehicleId'
@@ -194,7 +210,12 @@ class TripLocalDataSourceImpl implements TripLocalDataSource {
           final lng1 = (rows[i - 1]['longitude'] as num).toDouble();
           final lat2 = (rows[i]['latitude'] as num).toDouble();
           final lng2 = (rows[i]['longitude'] as num).toDouble();
-          final dMeters = GeoUtils.calculateDistanceMeters(lat1, lng1, lat2, lng2);
+          final dMeters = GeoUtils.calculateDistanceMeters(
+            lat1,
+            lng1,
+            lat2,
+            lng2,
+          );
           distanceKm += (dMeters / 1000.0);
         }
       }
@@ -204,7 +225,8 @@ class TripLocalDataSourceImpl implements TripLocalDataSource {
       averageSocUsed = (startSoc - endSoc).clamp(0.0, 100.0);
     }
 
-    final updateSql = '''
+    final updateSql =
+        '''
       UPDATE trips
       SET distance_km = $distanceKm,
           max_speed = $maxSpeed,

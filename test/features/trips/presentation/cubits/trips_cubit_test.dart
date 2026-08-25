@@ -98,16 +98,19 @@ void main() {
       expect(cubit.state, equals(TripsInitial()));
     });
 
-    test('2. loadTrips emits Loading then Loaded with ongoing and completed trips separated', () async {
-      await cubit.loadTrips();
+    test(
+      '2. loadTrips emits Loading then Loaded with ongoing and completed trips separated',
+      () async {
+        await cubit.loadTrips();
 
-      expect(cubit.state, isA<TripsLoaded>());
-      final loaded = cubit.state as TripsLoaded;
-      expect(loaded.allTrips.length, 2);
-      expect(loaded.ongoingTrips.length, 1);
-      expect(loaded.completedTrips.length, 1);
-      expect(loaded.ongoingTrips.first.vehicleId, 'EV-101');
-      expect(loaded.completedTrips.first.vehicleId, 'EV-102');
-    });
+        expect(cubit.state, isA<TripsLoaded>());
+        final loaded = cubit.state as TripsLoaded;
+        expect(loaded.allTrips.length, 2);
+        expect(loaded.ongoingTrips.length, 1);
+        expect(loaded.completedTrips.length, 1);
+        expect(loaded.ongoingTrips.first.vehicleId, 'EV-101');
+        expect(loaded.completedTrips.first.vehicleId, 'EV-102');
+      },
+    );
   });
 }

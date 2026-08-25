@@ -9,10 +9,7 @@ class AlertRepositoryImpl implements AlertRepository {
   final AlertLocalDataSource localDataSource;
   final DatabaseEventBus eventBus;
 
-  AlertRepositoryImpl({
-    required this.localDataSource,
-    required this.eventBus,
-  });
+  AlertRepositoryImpl({required this.localDataSource, required this.eventBus});
 
   @override
   Future<List<Alert>> getActiveAlerts() async {
@@ -30,14 +27,26 @@ class AlertRepositoryImpl implements AlertRepository {
   }
 
   @override
-  Future<void> updateAlertStatus(String alertId, AlertStatus status, {String? dismissalReason}) async {
-    await localDataSource.updateAlertStatus(alertId, status, dismissalReason: dismissalReason);
-    eventBus.notify(DatabaseChangeEvent(table: DatabaseTable.alerts, entityId: alertId));
+  Future<void> updateAlertStatus(
+    String alertId,
+    AlertStatus status, {
+    String? dismissalReason,
+  }) async {
+    await localDataSource.updateAlertStatus(
+      alertId,
+      status,
+      dismissalReason: dismissalReason,
+    );
+    eventBus.notify(
+      DatabaseChangeEvent(table: DatabaseTable.alerts, entityId: alertId),
+    );
   }
 
   @override
   Future<void> evaluateTelemetryAlerts(List<TelemetryPacket> packets) async {
-    final models = packets.map((p) => TelemetryPacketModel.fromEntity(p)).toList();
+    final models = packets
+        .map((p) => TelemetryPacketModel.fromEntity(p))
+        .toList();
     await localDataSource.evaluateTelemetryAlerts(models);
     eventBus.notify(DatabaseChangeEvent(table: DatabaseTable.alerts));
   }

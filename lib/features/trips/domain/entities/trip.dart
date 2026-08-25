@@ -29,15 +29,15 @@ class Trip extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        vehicleId,
-        startGeofenceId,
-        endGeofenceId,
-        startTime,
-        endTime,
-        distanceKm,
-        maxSpeedKmh,
-        averageSocUsed,
-        status,
-      ];
+    id,
+    vehicleId,
+    startGeofenceId,
+    endGeofenceId,
+    startTime,
+    endTime,
+    distanceKm,
+    maxSpeedKmh,
+    averageSocUsed,
+    status,
+  ];
 }

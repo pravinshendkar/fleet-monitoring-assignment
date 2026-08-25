@@ -51,7 +51,11 @@ class MockAlertRepo implements AlertRepository {
   Future<List<Alert>> getAllAlerts() async => [];
 
   @override
-  Future<void> updateAlertStatus(String alertId, AlertStatus status, {String? dismissalReason}) async {}
+  Future<void> updateAlertStatus(
+    String alertId,
+    AlertStatus status, {
+    String? dismissalReason,
+  }) async {}
 }
 
 class MockGeofenceRepo implements GeofenceRepository {
@@ -65,7 +69,10 @@ class MockGeofenceRepo implements GeofenceRepository {
   Future<void> saveGeofence(Geofence geofence) async {}
 
   @override
-  Future<void> setGeofenceActiveStatus(String geofenceId, bool isActive) async {}
+  Future<void> setGeofenceActiveStatus(
+    String geofenceId,
+    bool isActive,
+  ) async {}
 
   @override
   Future<void> updateGeofence(Geofence geofence) async {}
@@ -113,41 +120,46 @@ void main() {
       );
     });
 
-    test('sorts packets chronologically and orchestrates telemetry ingest', () async {
-      final now = DateTime.now();
-      final packetLater = TelemetryPacket(
-        packetId: 'p2',
-        vehicleId: 'v1',
-        eventTimestamp: now.add(const Duration(minutes: 2)),
-        ingestTimestamp: now,
-        latitude: 12.0,
-        longitude: 77.0,
-        speed: 30.0,
-        batteryLevel: 80.0,
-        batteryTemp: 28.0,
-        odometerKm: 100.0,
-        ignition: true,
-      );
+    test(
+      'sorts packets chronologically and orchestrates telemetry ingest',
+      () async {
+        final now = DateTime.now();
+        final packetLater = TelemetryPacket(
+          packetId: 'p2',
+          vehicleId: 'v1',
+          eventTimestamp: now.add(const Duration(minutes: 2)),
+          ingestTimestamp: now,
+          latitude: 12.0,
+          longitude: 77.0,
+          speed: 30.0,
+          batteryLevel: 80.0,
+          batteryTemp: 28.0,
+          odometerKm: 100.0,
+          ignition: true,
+        );
 
-      final packetEarlier = TelemetryPacket(
-        packetId: 'p1',
-        vehicleId: 'v1',
-        eventTimestamp: now,
-        ingestTimestamp: now,
-        latitude: 12.0,
-        longitude: 77.0,
-        speed: 25.0,
-        batteryLevel: 81.0,
-        batteryTemp: 28.0,
-        odometerKm: 99.0,
-        ignition: true,
-      );
+        final packetEarlier = TelemetryPacket(
+          packetId: 'p1',
+          vehicleId: 'v1',
+          eventTimestamp: now,
+          ingestTimestamp: now,
+          latitude: 12.0,
+          longitude: 77.0,
+          speed: 25.0,
+          batteryLevel: 81.0,
+          batteryTemp: 28.0,
+          odometerKm: 99.0,
+          ignition: true,
+        );
 
-      await useCase(ProcessTelemetryBatchParams([packetLater, packetEarlier]));
+        await useCase(
+          ProcessTelemetryBatchParams([packetLater, packetEarlier]),
+        );
 
-      expect(telemetryRepo.ingestedPackets.length, 2);
-      expect(telemetryRepo.ingestedPackets[0].packetId, 'p1');
-      expect(telemetryRepo.ingestedPackets[1].packetId, 'p2');
-    });
+        expect(telemetryRepo.ingestedPackets.length, 2);
+        expect(telemetryRepo.ingestedPackets[0].packetId, 'p1');
+        expect(telemetryRepo.ingestedPackets[1].packetId, 'p2');
+      },
+    );
   });
 }

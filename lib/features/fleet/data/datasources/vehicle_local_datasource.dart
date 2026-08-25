@@ -36,7 +36,9 @@ class VehicleLocalDataSourceImpl implements VehicleLocalDataSource {
       if (statusFilter == VehicleStatus.offline) {
         conditions.add("last_seen_at < (now() - INTERVAL 10 MINUTE)");
       } else {
-        conditions.add("status = '${statusFilter.name}' AND last_seen_at >= (now() - INTERVAL 10 MINUTE)");
+        conditions.add(
+          "status = '${statusFilter.name}' AND last_seen_at >= (now() - INTERVAL 10 MINUTE)",
+        );
       }
     }
 
@@ -46,12 +48,17 @@ class VehicleLocalDataSourceImpl implements VehicleLocalDataSource {
 
     if (searchQuery != null && searchQuery.isNotEmpty) {
       final cleanQuery = searchQuery.replaceAll("'", "''");
-      conditions.add("(vehicle_id LIKE '%$cleanQuery%' OR name LIKE '%$cleanQuery%')");
+      conditions.add(
+        "(vehicle_id LIKE '%$cleanQuery%' OR name LIKE '%$cleanQuery%')",
+      );
     }
 
-    final whereClause = conditions.isNotEmpty ? "WHERE ${conditions.join(' AND ')}" : "";
+    final whereClause = conditions.isNotEmpty
+        ? "WHERE ${conditions.join(' AND ')}"
+        : "";
 
-    final sql = '''
+    final sql =
+        '''
       SELECT * FROM vehicles
       $whereClause
       ORDER BY name ASC

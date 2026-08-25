@@ -22,7 +22,11 @@ class MockAlertRepository implements AlertRepository {
   Future<List<Alert>> getAllAlerts() async => [];
 
   @override
-  Future<void> updateAlertStatus(String alertId, AlertStatus status, {String? dismissalReason}) async {}
+  Future<void> updateAlertStatus(
+    String alertId,
+    AlertStatus status, {
+    String? dismissalReason,
+  }) async {}
 }
 
 void main() {
@@ -35,27 +39,30 @@ void main() {
       useCase = EvaluateAlertsUseCase(alertRepository);
     });
 
-    test('evaluates fresh packets for low battery and overheating alerts', () async {
-      final now = DateTime.now();
-      final freshPacket = TelemetryPacket(
-        packetId: 'p1',
-        vehicleId: 'v1',
-        eventTimestamp: now.subtract(const Duration(minutes: 1)),
-        ingestTimestamp: now,
-        latitude: 12.9716,
-        longitude: 77.5946,
-        speed: 0.0,
-        batteryLevel: 15.0, // Low battery < 20%
-        batteryTemp: 48.0, // Overheating > 45°C
-        odometerKm: 120.0,
-        ignition: true,
-      );
+    test(
+      'evaluates fresh packets for low battery and overheating alerts',
+      () async {
+        final now = DateTime.now();
+        final freshPacket = TelemetryPacket(
+          packetId: 'p1',
+          vehicleId: 'v1',
+          eventTimestamp: now.subtract(const Duration(minutes: 1)),
+          ingestTimestamp: now,
+          latitude: 12.9716,
+          longitude: 77.5946,
+          speed: 0.0,
+          batteryLevel: 15.0, // Low battery < 20%
+          batteryTemp: 48.0, // Overheating > 45°C
+          odometerKm: 120.0,
+          ignition: true,
+        );
 
-      await useCase([freshPacket]);
+        await useCase([freshPacket]);
 
-      expect(alertRepository.evaluatedPackets.length, 1);
-      expect(alertRepository.evaluatedPackets.first.packetId, 'p1');
-    });
+        expect(alertRepository.evaluatedPackets.length, 1);
+        expect(alertRepository.evaluatedPackets.first.packetId, 'p1');
+      },
+    );
 
     test('ignores stale readings (> 10 mins old)', () async {
       final now = DateTime.now();

@@ -22,20 +22,32 @@ class GeofenceRepositoryImpl implements GeofenceRepository {
   Future<void> saveGeofence(Geofence geofence) async {
     final model = GeofenceModel.fromEntity(geofence);
     await localDataSource.saveGeofence(model);
-    eventBus.notify(DatabaseChangeEvent(table: DatabaseTable.geofences, entityId: geofence.id));
+    eventBus.notify(
+      DatabaseChangeEvent(
+        table: DatabaseTable.geofences,
+        entityId: geofence.id,
+      ),
+    );
   }
 
   @override
   Future<void> updateGeofence(Geofence geofence) async {
     final model = GeofenceModel.fromEntity(geofence);
     await localDataSource.updateGeofence(model);
-    eventBus.notify(DatabaseChangeEvent(table: DatabaseTable.geofences, entityId: geofence.id));
+    eventBus.notify(
+      DatabaseChangeEvent(
+        table: DatabaseTable.geofences,
+        entityId: geofence.id,
+      ),
+    );
   }
 
   @override
   Future<void> setGeofenceActiveStatus(String geofenceId, bool isActive) async {
     await localDataSource.setGeofenceActiveStatus(geofenceId, isActive);
-    eventBus.notify(DatabaseChangeEvent(table: DatabaseTable.geofences, entityId: geofenceId));
+    eventBus.notify(
+      DatabaseChangeEvent(table: DatabaseTable.geofences, entityId: geofenceId),
+    );
   }
 
   @override

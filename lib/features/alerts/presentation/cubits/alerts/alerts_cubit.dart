@@ -41,12 +41,14 @@ class AlertsCubit extends Cubit<AlertsState> {
       final active = await alertRepository.getActiveAlerts();
       final all = await alertRepository.getAllAlerts();
 
-      emit(AlertsLoaded(
-        activeAlerts: active,
-        allAlerts: all,
-        recentlyDismissedAlert: _lastDismissedAlert,
-        showUndoBanner: _undoTimer != null && _undoTimer!.isActive,
-      ));
+      emit(
+        AlertsLoaded(
+          activeAlerts: active,
+          allAlerts: all,
+          recentlyDismissedAlert: _lastDismissedAlert,
+          showUndoBanner: _undoTimer != null && _undoTimer!.isActive,
+        ),
+      );
     } catch (e) {
       emit(AlertsError('Failed to load alerts: ${e.toString()}'));
     }
@@ -71,13 +73,17 @@ class AlertsCubit extends Cubit<AlertsState> {
       _lastDismissedAlert = null;
       if (state is AlertsLoaded) {
         final current = state as AlertsLoaded;
-        emit(current.copyWith(clearRecentlyDismissed: true, showUndoBanner: false));
+        emit(
+          current.copyWith(clearRecentlyDismissed: true, showUndoBanner: false),
+        );
       }
     });
 
     if (state is AlertsLoaded) {
       final current = state as AlertsLoaded;
-      emit(current.copyWith(recentlyDismissedAlert: alert, showUndoBanner: true));
+      emit(
+        current.copyWith(recentlyDismissedAlert: alert, showUndoBanner: true),
+      );
     }
   }
 

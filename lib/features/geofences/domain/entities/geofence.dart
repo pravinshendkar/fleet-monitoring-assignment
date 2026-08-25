@@ -45,13 +45,13 @@ class Geofence extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        centerLat,
-        centerLng,
-        radiusMeters,
-        isActive,
-        createdAt,
-        activeVehicleCount,
-      ];
+    id,
+    name,
+    centerLat,
+    centerLng,
+    radiusMeters,
+    isActive,
+    createdAt,
+    activeVehicleCount,
+  ];
 }

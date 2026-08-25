@@ -6,7 +6,8 @@ import '../repositories/geofence_repository.dart';
 
 class DetectGeofenceTransitionsParams {
   final List<TelemetryPacket> packets;
-  final Map<String, Set<String>> activeVehicleGeofences; // (vehicleId -> Set of geofenceIds currently inside)
+  final Map<String, Set<String>>
+  activeVehicleGeofences; // (vehicleId -> Set of geofenceIds currently inside)
 
   DetectGeofenceTransitionsParams({
     required this.packets,
@@ -21,7 +22,9 @@ class DetectGeofenceTransitionsUseCase
   DetectGeofenceTransitionsUseCase(this.geofenceRepository);
 
   @override
-  Future<List<GeofenceEvent>> call(DetectGeofenceTransitionsParams params) async {
+  Future<List<GeofenceEvent>> call(
+    DetectGeofenceTransitionsParams params,
+  ) async {
     if (params.packets.isEmpty) return [];
 
     final activeGeofences = await geofenceRepository.getGeofences();
@@ -29,10 +32,9 @@ class DetectGeofenceTransitionsUseCase
     if (geofences.isEmpty) return [];
 
     // Filter out inaccurate GPS readings (> 50m accuracy) and sort by eventTimestamp ASC
-    final validPackets = params.packets
-        .where((p) => p.gpsAccuracy <= 50.0)
-        .toList()
-      ..sort((a, b) => a.eventTimestamp.compareTo(b.eventTimestamp));
+    final validPackets =
+        params.packets.where((p) => p.gpsAccuracy <= 50.0).toList()
+          ..sort((a, b) => a.eventTimestamp.compareTo(b.eventTimestamp));
 
     final detectedEvents = <GeofenceEvent>[];
     // Tracking state: vehicleId -> geofenceId -> consecutive count state
@@ -45,9 +47,18 @@ class DetectGeofenceTransitionsUseCase
     });
 
     for (final packet in validPackets) {
-      final insideSet = vehicleInsideState.putIfAbsent(packet.vehicleId, () => <String>{});
-      final insideCounts = consecutiveInsideCounts.putIfAbsent(packet.vehicleId, () => <String, int>{});
-      final outsideCounts = consecutiveOutsideCounts.putIfAbsent(packet.vehicleId, () => <String, int>{});
+      final insideSet = vehicleInsideState.putIfAbsent(
+        packet.vehicleId,
+        () => <String>{},
+      );
+      final insideCounts = consecutiveInsideCounts.putIfAbsent(
+        packet.vehicleId,
+        () => <String, int>{},
+      );
+      final outsideCounts = consecutiveOutsideCounts.putIfAbsent(
+        packet.vehicleId,
+        () => <String, int>{},
+      );
 
       for (final geofence in geofences) {
         final distance = GeoUtils.calculateDistanceMeters(
@@ -73,14 +84,16 @@ class DetectGeofenceTransitionsUseCase
               insideCounts[geofence.id] = 0;
               outsideCounts[geofence.id] = 0;
 
-              detectedEvents.add(GeofenceEvent(
-                id: 'evt_entry_${packet.vehicleId}_${geofence.id}_${packet.packetId}',
-                vehicleId: packet.vehicleId,
-                geofenceId: geofence.id,
-                type: GeofenceEventType.entry,
-                eventTimestamp: packet.eventTimestamp,
-                packetId: packet.packetId,
-              ));
+              detectedEvents.add(
+                GeofenceEvent(
+                  id: 'evt_entry_${packet.vehicleId}_${geofence.id}_${packet.packetId}',
+                  vehicleId: packet.vehicleId,
+                  geofenceId: geofence.id,
+                  type: GeofenceEventType.entry,
+                  eventTimestamp: packet.eventTimestamp,
+                  packetId: packet.packetId,
+                ),
+              );
             }
           } else {
             insideCounts[geofence.id] = 0;
@@ -96,14 +109,16 @@ class DetectGeofenceTransitionsUseCase
               outsideCounts[geofence.id] = 0;
               insideCounts[geofence.id] = 0;
 
-              detectedEvents.add(GeofenceEvent(
-                id: 'evt_exit_${packet.vehicleId}_${geofence.id}_${packet.packetId}',
-                vehicleId: packet.vehicleId,
-                geofenceId: geofence.id,
-                type: GeofenceEventType.exit,
-                eventTimestamp: packet.eventTimestamp,
-                packetId: packet.packetId,
-              ));
+              detectedEvents.add(
+                GeofenceEvent(
+                  id: 'evt_exit_${packet.vehicleId}_${geofence.id}_${packet.packetId}',
+                  vehicleId: packet.vehicleId,
+                  geofenceId: geofence.id,
+                  type: GeofenceEventType.exit,
+                  eventTimestamp: packet.eventTimestamp,
+                  packetId: packet.packetId,
+                ),
+              );
             }
           } else {
             outsideCounts[geofence.id] = 0;

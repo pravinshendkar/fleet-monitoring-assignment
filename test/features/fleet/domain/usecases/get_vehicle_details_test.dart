@@ -84,14 +84,17 @@ void main() {
       );
     });
 
-    test('1. Vehicle not found returns null vehicle and empty signals', () async {
-      final result = await useCase('UNKNOWN-999');
+    test(
+      '1. Vehicle not found returns null vehicle and empty signals',
+      () async {
+        final result = await useCase('UNKNOWN-999');
 
-      expect(result.vehicle, isNull);
-      expect(result.socSignal.displayValue, '—');
-      expect(result.socSignal.verdict, SignalVerdict.none);
-      expect(result.socHistory, isEmpty);
-    });
+        expect(result.vehicle, isNull);
+        expect(result.socSignal.displayValue, '—');
+        expect(result.socSignal.verdict, SignalVerdict.none);
+        expect(result.socHistory, isEmpty);
+      },
+    );
 
     test('2. Fresh NORMAL telemetry packet returns NORMAL verdicts', () async {
       vehicleRepo.vehicle = testVehicle;

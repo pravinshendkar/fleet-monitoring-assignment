@@ -3,10 +3,7 @@ import 'package:flutter/material.dart';
 class DismissReasonSheet extends StatefulWidget {
   final ValueChanged<String> onReasonSelected;
 
-  const DismissReasonSheet({
-    super.key,
-    required this.onReasonSelected,
-  });
+  const DismissReasonSheet({super.key, required this.onReasonSelected});
 
   @override
   State<DismissReasonSheet> createState() => _DismissReasonSheetState();
@@ -37,10 +34,7 @@ class _DismissReasonSheetState extends State<DismissReasonSheet> {
         children: [
           const Text(
             'Select Dismissal Reason',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 6),
           Text(
@@ -52,8 +46,14 @@ class _DismissReasonSheetState extends State<DismissReasonSheet> {
           if (!_showCustomInput) ...[
             // Option 1: I am on it
             ListTile(
-              leading: const Icon(Icons.build_circle_outlined, color: Colors.blue),
-              title: const Text('I am on it', style: TextStyle(fontWeight: FontWeight.w600)),
+              leading: const Icon(
+                Icons.build_circle_outlined,
+                color: Colors.blue,
+              ),
+              title: const Text(
+                'I am on it',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
               onTap: () {
                 Navigator.of(context).pop();
                 widget.onReasonSelected('I am on it');
@@ -63,8 +63,14 @@ class _DismissReasonSheetState extends State<DismissReasonSheet> {
 
             // Option 2: Wrong alert
             ListTile(
-              leading: const Icon(Icons.report_problem_outlined, color: Colors.orange),
-              title: const Text('Wrong alert', style: TextStyle(fontWeight: FontWeight.w600)),
+              leading: const Icon(
+                Icons.report_problem_outlined,
+                color: Colors.orange,
+              ),
+              title: const Text(
+                'Wrong alert',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
               onTap: () {
                 Navigator.of(context).pop();
                 widget.onReasonSelected('Wrong alert');
@@ -75,7 +81,10 @@ class _DismissReasonSheetState extends State<DismissReasonSheet> {
             // Option 3: Something else…
             ListTile(
               leading: const Icon(Icons.edit_note, color: Colors.purple),
-              title: const Text('Something else…', style: TextStyle(fontWeight: FontWeight.w600)),
+              title: const Text(
+                'Something else…',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
               onTap: () {
                 setState(() {
                   _showCustomInput = true;
@@ -90,7 +99,10 @@ class _DismissReasonSheetState extends State<DismissReasonSheet> {
               decoration: const InputDecoration(
                 hintText: 'Enter reason...',
                 border: OutlineInputBorder(),
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
               ),
             ),
             const SizedBox(height: 16),

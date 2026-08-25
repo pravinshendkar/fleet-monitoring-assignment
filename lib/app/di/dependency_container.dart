@@ -1,3 +1,6 @@
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
+
 import '../../core/database/database_event_bus.dart';
 import '../../core/database/duckdb_client.dart';
 import '../../core/database/seed_data_service.dart';
@@ -36,6 +39,16 @@ import '../../features/trips/domain/usecases/process_trips.dart';
 class DependencyContainer {
   final DuckDbClient dbClient;
   final DatabaseEventBus eventBus;
+
+  static Future<String> resolvePlatformDatabasePath() async {
+    try {
+      final appDir = await getApplicationDocumentsDirectory();
+      return p.join(appDir.path, 'fleet_console.duckdb');
+    } catch (_) {
+      // Fallback for non-Flutter environments / unit tests without PathProvider mocking
+      return 'fleet_console.duckdb';
+    }
+  }
 
   // Repositories (Domain Abstractions)
   final TelemetryRepository telemetryRepository;
@@ -92,12 +105,14 @@ class DependencyContainer {
   });
 
   static Future<DependencyContainer> create({
-    String dbPath = 'fleet_console.duckdb',
+    String? dbPath,
     bool autoSeed = true,
   }) async {
+    final resolvedPath = dbPath ?? await resolvePlatformDatabasePath();
+
     // 1. Core Infrastructure
-    final dbClient = DuckDbClient();
-    await dbClient.init(dbPath);
+    final dbClient = DuckDbClient(databasePath: resolvedPath);
+    await dbClient.init();
 
     final eventBus = DatabaseEventBus();
 

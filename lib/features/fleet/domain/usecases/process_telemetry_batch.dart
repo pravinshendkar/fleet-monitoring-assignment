@@ -11,7 +11,8 @@ class ProcessTelemetryBatchParams {
   ProcessTelemetryBatchParams(this.packets);
 }
 
-class ProcessTelemetryBatchUseCase implements UseCase<void, ProcessTelemetryBatchParams> {
+class ProcessTelemetryBatchUseCase
+    implements UseCase<void, ProcessTelemetryBatchParams> {
   final TelemetryRepository telemetryRepository;
   final EvaluateAlertsUseCase evaluateAlertsUseCase;
   final DetectGeofenceTransitionsUseCase detectGeofenceTransitionsUseCase;

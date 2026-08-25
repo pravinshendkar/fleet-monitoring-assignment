@@ -25,10 +25,17 @@ class MockAlertRepoView implements AlertRepository {
   Future<List<Alert>> getAllAlerts() async => allList;
 
   @override
-  Future<void> updateAlertStatus(String alertId, AlertStatus status, {String? dismissalReason}) async {
+  Future<void> updateAlertStatus(
+    String alertId,
+    AlertStatus status, {
+    String? dismissalReason,
+  }) async {
     final idx = allList.indexWhere((a) => a.id == alertId);
     if (idx != -1) {
-      allList[idx] = allList[idx].copyWith(status: status, dismissalReason: dismissalReason);
+      allList[idx] = allList[idx].copyWith(
+        status: status,
+        dismissalReason: dismissalReason,
+      );
     }
   }
 
@@ -85,43 +92,46 @@ void main() {
       undoAlertDismissal = UndoAlertDismissalUseCase(alertRepo);
     });
 
-    testWidgets('renders active alert card and opens dismissal reason sheet with exact ordered reasons', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: BlocProvider(
-            create: (context) => AlertsCubit(
-              alertRepository: alertRepo,
-              vehicleRepository: vehicleRepo,
-              updateAlertStatusUseCase: updateAlertStatus,
-              undoAlertDismissalUseCase: undoAlertDismissal,
+    testWidgets(
+      'renders active alert card and opens dismissal reason sheet with exact ordered reasons',
+      (WidgetTester tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: BlocProvider(
+              create: (context) => AlertsCubit(
+                alertRepository: alertRepo,
+                vehicleRepository: vehicleRepo,
+                updateAlertStatusUseCase: updateAlertStatus,
+                undoAlertDismissalUseCase: undoAlertDismissal,
+              ),
+              child: const AlertsView(),
             ),
-            child: const AlertsView(),
           ),
-        ),
-      );
+        );
 
-      await tester.pumpAndSettle();
+        await tester.pumpAndSettle();
 
-      // App bar & title
-      expect(find.text('Fleet Alerts'), findsOneWidget);
+        // App bar & title
+        expect(find.text('Fleet Alerts'), findsOneWidget);
 
-      // Alert card content
-      expect(find.text('Vehicle: EV-101'), findsOneWidget);
-      expect(find.text('WARNING'), findsOneWidget);
-      expect(find.text('Dismiss'), findsOneWidget);
+        // Alert card content
+        expect(find.text('Vehicle: EV-101'), findsOneWidget);
+        expect(find.text('WARNING'), findsOneWidget);
+        expect(find.text('Dismiss'), findsOneWidget);
 
-      // Tap Dismiss button
-      await tester.tap(find.text('Dismiss'));
-      await tester.pumpAndSettle();
+        // Tap Dismiss button
+        await tester.tap(find.text('Dismiss'));
+        await tester.pumpAndSettle();
 
-      // Verify Dismissal Sheet reasons in exact order:
-      // 1. I am on it
-      // 2. Wrong alert
-      // 3. Something else…
-      expect(find.text('Select Dismissal Reason'), findsOneWidget);
-      expect(find.text('I am on it'), findsOneWidget);
-      expect(find.text('Wrong alert'), findsOneWidget);
-      expect(find.text('Something else…'), findsOneWidget);
-    });
+        // Verify Dismissal Sheet reasons in exact order:
+        // 1. I am on it
+        // 2. Wrong alert
+        // 3. Something else…
+        expect(find.text('Select Dismissal Reason'), findsOneWidget);
+        expect(find.text('I am on it'), findsOneWidget);
+        expect(find.text('Wrong alert'), findsOneWidget);
+        expect(find.text('Something else…'), findsOneWidget);
+      },
+    );
   });
 }

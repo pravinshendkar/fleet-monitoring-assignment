@@ -28,7 +28,8 @@ class VehicleModel extends Vehicle {
           : DateTime.parse(map['last_seen_at'].toString()),
       ignition: (map['ignition'] is bool)
           ? map['ignition'] as bool
-          : (map['ignition'].toString() == '1' || map['ignition'].toString() == 'true'),
+          : (map['ignition'].toString() == '1' ||
+                map['ignition'].toString() == 'true'),
     );
   }
 

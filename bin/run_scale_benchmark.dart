@@ -9,7 +9,8 @@ void main() async {
   debugPrint(' Bytebeam Fleet Console - 2,000,000 Row Scale Benchmark');
   debugPrint('====================================================');
 
-  final tempDbPath = 'scale_benchmark_2m_${DateTime.now().millisecondsSinceEpoch}.duckdb';
+  final tempDbPath =
+      'scale_benchmark_2m_${DateTime.now().millisecondsSinceEpoch}.duckdb';
   final dbFile = File(tempDbPath);
 
   // 1. Cold Start Measurement (App Process / DB Init / Fleet Load)
@@ -30,7 +31,9 @@ void main() async {
   debugPrint('  -> Cold Start Duration: $coldStartMs ms');
 
   // 2. High-Performance Bulk Dataset Generation (500 Vehicles, 2,000,000 Telemetry Rows)
-  debugPrint('\n[2/4] Populating 500 Vehicles & 2,000,000 Signal Rows in DuckDB...');
+  debugPrint(
+    '\n[2/4] Populating 500 Vehicles & 2,000,000 Signal Rows in DuckDB...',
+  );
   final ingestStopwatch = Stopwatch()..start();
 
   // Populate 500 vehicles
@@ -81,12 +84,18 @@ void main() async {
   ingestStopwatch.stop();
 
   // Verify counts
-  final vehicleCountMaps = await client.query('SELECT COUNT(*) as count FROM vehicles;');
-  final telemetryCountMaps = await client.query('SELECT COUNT(*) as count FROM telemetry_packets;');
+  final vehicleCountMaps = await client.query(
+    'SELECT COUNT(*) as count FROM vehicles;',
+  );
+  final telemetryCountMaps = await client.query(
+    'SELECT COUNT(*) as count FROM telemetry_packets;',
+  );
   final totalVehicles = vehicleCountMaps.first['count'];
   final totalTelemetry = telemetryCountMaps.first['count'];
 
-  debugPrint('  -> Ingested $totalVehicles vehicles & $totalTelemetry signal rows in ${ingestStopwatch.elapsedMilliseconds} ms.');
+  debugPrint(
+    '  -> Ingested $totalVehicles vehicles & $totalTelemetry signal rows in ${ingestStopwatch.elapsedMilliseconds} ms.',
+  );
 
   // 3. Fleet Query Latency Benchmark (p50 & p95 over 50 iterations)
   debugPrint('\n[3/4] Benchmarking Warm Fleet-List Queries (50 Iterations)...');
@@ -134,7 +143,9 @@ void main() async {
   debugPrint('\n====================================================');
   debugPrint(' SUMMARY OF EMPIRICAL MEASUREMENTS');
   debugPrint('====================================================');
-  debugPrint(' Dataset Size:      $totalVehicles Vehicles, $totalTelemetry Telemetry Packets');
+  debugPrint(
+    ' Dataset Size:      $totalVehicles Vehicles, $totalTelemetry Telemetry Packets',
+  );
   debugPrint(' Cold-Start:        $coldStartMs ms');
   debugPrint(' Fleet Query p50:   $p50 ms');
   debugPrint(' Fleet Query p95:   $p95 ms');

@@ -5,15 +5,18 @@ void main() {
   group('Vehicle Entity & Status Rule Tests', () {
     final now = DateTime(2026, 8, 25, 10, 0, 0);
 
-    test('1. OFFLINE precedence: lastSeenAt > 10 mins ago overrides speed and ignition', () {
-      final status = Vehicle.calculateStatus(
-        lastSeenAt: now.subtract(const Duration(minutes: 11)),
-        speed: 60.0,
-        ignition: true,
-        relativeTo: now,
-      );
-      expect(status, VehicleStatus.offline);
-    });
+    test(
+      '1. OFFLINE precedence: lastSeenAt > 10 mins ago overrides speed and ignition',
+      () {
+        final status = Vehicle.calculateStatus(
+          lastSeenAt: now.subtract(const Duration(minutes: 11)),
+          speed: 60.0,
+          ignition: true,
+          relativeTo: now,
+        );
+        expect(status, VehicleStatus.offline);
+      },
+    );
 
     test('2. MOVING precedence: recent ping with speed > 0', () {
       final status = Vehicle.calculateStatus(
@@ -25,25 +28,31 @@ void main() {
       expect(status, VehicleStatus.moving);
     });
 
-    test('3. IDLE precedence: recent ping with speed == 0 and ignition == true', () {
-      final status = Vehicle.calculateStatus(
-        lastSeenAt: now.subtract(const Duration(minutes: 1)),
-        speed: 0.0,
-        ignition: true,
-        relativeTo: now,
-      );
-      expect(status, VehicleStatus.idle);
-    });
+    test(
+      '3. IDLE precedence: recent ping with speed == 0 and ignition == true',
+      () {
+        final status = Vehicle.calculateStatus(
+          lastSeenAt: now.subtract(const Duration(minutes: 1)),
+          speed: 0.0,
+          ignition: true,
+          relativeTo: now,
+        );
+        expect(status, VehicleStatus.idle);
+      },
+    );
 
-    test('4. STOPPED precedence: recent ping with speed == 0 and ignition == false', () {
-      final status = Vehicle.calculateStatus(
-        lastSeenAt: now.subtract(const Duration(seconds: 30)),
-        speed: 0.0,
-        ignition: false,
-        relativeTo: now,
-      );
-      expect(status, VehicleStatus.stopped);
-    });
+    test(
+      '4. STOPPED precedence: recent ping with speed == 0 and ignition == false',
+      () {
+        final status = Vehicle.calculateStatus(
+          lastSeenAt: now.subtract(const Duration(seconds: 30)),
+          speed: 0.0,
+          ignition: false,
+          relativeTo: now,
+        );
+        expect(status, VehicleStatus.stopped);
+      },
+    );
 
     test('isStale returns true when lastSeenAt is older than 10 mins', () {
       final staleVehicle = Vehicle(

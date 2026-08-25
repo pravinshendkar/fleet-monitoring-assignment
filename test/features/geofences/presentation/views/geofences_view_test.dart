@@ -93,32 +93,35 @@ void main() {
       deactivateGeofence = DeactivateGeofenceUseCase(geofenceRepo);
     });
 
-    testWidgets('renders geofence card with active status badge and SQL vehicle count', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: BlocProvider(
-            create: (context) => GeofencesCubit(
-              geofenceRepository: geofenceRepo,
-              vehicleRepository: vehicleRepo,
-              createGeofenceUseCase: createGeofence,
-              updateGeofenceUseCase: updateGeofence,
-              deactivateGeofenceUseCase: deactivateGeofence,
+    testWidgets(
+      'renders geofence card with active status badge and SQL vehicle count',
+      (WidgetTester tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: BlocProvider(
+              create: (context) => GeofencesCubit(
+                geofenceRepository: geofenceRepo,
+                vehicleRepository: vehicleRepo,
+                createGeofenceUseCase: createGeofence,
+                updateGeofenceUseCase: updateGeofence,
+                deactivateGeofenceUseCase: deactivateGeofence,
+              ),
+              child: const GeofencesView(),
             ),
-            child: const GeofencesView(),
           ),
-        ),
-      );
+        );
 
-      await tester.pumpAndSettle();
+        await tester.pumpAndSettle();
 
-      // App bar & title
-      expect(find.text('Geofences'), findsOneWidget);
+        // App bar & title
+        expect(find.text('Geofences'), findsOneWidget);
 
-      // Geofence Card content
-      expect(find.text('Bangalore Central Depot'), findsOneWidget);
-      expect(find.text('ACTIVE'), findsOneWidget);
-      expect(find.text('3 vehicles inside'), findsOneWidget);
-      expect(find.text('Radius: 500 meters'), findsOneWidget);
-    });
+        // Geofence Card content
+        expect(find.text('Bangalore Central Depot'), findsOneWidget);
+        expect(find.text('ACTIVE'), findsOneWidget);
+        expect(find.text('3 vehicles inside'), findsOneWidget);
+        expect(find.text('Radius: 500 meters'), findsOneWidget);
+      },
+    );
   });
 }

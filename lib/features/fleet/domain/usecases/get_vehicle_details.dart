@@ -31,19 +31,20 @@ class VehicleDetailsResult extends Equatable {
 
   @override
   List<Object?> get props => [
-        vehicle,
-        socSignal,
-        rangeSignal,
-        speedSignal,
-        tempSignal,
-        odometerSignal,
-        lastPingSignal,
-        socHistory,
-        telemetryHistory,
-      ];
+    vehicle,
+    socSignal,
+    rangeSignal,
+    speedSignal,
+    tempSignal,
+    odometerSignal,
+    lastPingSignal,
+    socHistory,
+    telemetryHistory,
+  ];
 }
 
-class GetVehicleDetailsUseCase implements UseCase<VehicleDetailsResult, String> {
+class GetVehicleDetailsUseCase
+    implements UseCase<VehicleDetailsResult, String> {
   final VehicleRepository vehicleRepository;
   final TelemetryRepository telemetryRepository;
 
@@ -55,7 +56,10 @@ class GetVehicleDetailsUseCase implements UseCase<VehicleDetailsResult, String> 
   @override
   Future<VehicleDetailsResult> call(String vehicleId) async {
     final vehicle = await vehicleRepository.getVehicleById(vehicleId);
-    final history = await telemetryRepository.getVehicleTelemetryHistory(vehicleId, limit: 100);
+    final history = await telemetryRepository.getVehicleTelemetryHistory(
+      vehicleId,
+      limit: 100,
+    );
 
     if (history.isEmpty) {
       if (vehicle == null) {
@@ -76,7 +80,9 @@ class GetVehicleDetailsUseCase implements UseCase<VehicleDetailsResult, String> 
       final isStale = vehicle.isStale;
       final socVerdict = isStale
           ? SignalVerdict.stale
-          : (vehicle.lastSoc < 20.0 ? SignalVerdict.alert : SignalVerdict.normal);
+          : (vehicle.lastSoc < 20.0
+                ? SignalVerdict.alert
+                : SignalVerdict.normal);
 
       return VehicleDetailsResult(
         vehicle: vehicle,
@@ -110,7 +116,8 @@ class GetVehicleDetailsUseCase implements UseCase<VehicleDetailsResult, String> 
     // Process from latest telemetry packet
     final latest = history.first;
     final now = DateTime.now();
-    final isStale = now.difference(latest.eventTimestamp) > const Duration(minutes: 10);
+    final isStale =
+        now.difference(latest.eventTimestamp) > const Duration(minutes: 10);
 
     // SOC Signal
     SignalVerdict socVerdict;
@@ -129,7 +136,11 @@ class GetVehicleDetailsUseCase implements UseCase<VehicleDetailsResult, String> 
 
     // Range Signal
     final rangeKm = (latest.batteryLevel * 3.0).round();
-    final rangeVerdict = isStale ? SignalVerdict.stale : (latest.batteryLevel < 20.0 ? SignalVerdict.alert : SignalVerdict.normal);
+    final rangeVerdict = isStale
+        ? SignalVerdict.stale
+        : (latest.batteryLevel < 20.0
+              ? SignalVerdict.alert
+              : SignalVerdict.normal);
 
     // Speed Signal
     final speedVerdict = isStale ? SignalVerdict.stale : SignalVerdict.normal;

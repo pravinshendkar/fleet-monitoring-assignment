@@ -8,10 +8,7 @@ import 'di/dependency_provider.dart';
 class FleetConsoleApp extends StatelessWidget {
   final DependencyContainer container;
 
-  const FleetConsoleApp({
-    super.key,
-    required this.container,
-  });
+  const FleetConsoleApp({super.key, required this.container});
 
   @override
   Widget build(BuildContext context) {

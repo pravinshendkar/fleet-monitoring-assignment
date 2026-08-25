@@ -29,10 +29,7 @@ class _TripsViewState extends State<TripsView> {
           children: [
             Icon(Icons.route, color: Colors.indigo),
             SizedBox(width: 8),
-            Text(
-              'Fleet Trips',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
+            Text('Fleet Trips', style: TextStyle(fontWeight: FontWeight.bold)),
           ],
         ),
         actions: [
@@ -97,12 +94,17 @@ class _TripsViewState extends State<TripsView> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                          const Icon(
+                            Icons.error_outline,
+                            color: Colors.red,
+                            size: 48,
+                          ),
                           const SizedBox(height: 12),
                           Text(state.message, textAlign: TextAlign.center),
                           const SizedBox(height: 16),
                           ElevatedButton.icon(
-                            onPressed: () => context.read<TripsCubit>().loadTrips(),
+                            onPressed: () =>
+                                context.read<TripsCubit>().loadTrips(),
                             icon: const Icon(Icons.refresh),
                             label: const Text('Retry'),
                           ),
@@ -115,7 +117,9 @@ class _TripsViewState extends State<TripsView> {
                 if (state is TripsLoaded) {
                   final list = _selectedTab == 0
                       ? state.allTrips
-                      : (_selectedTab == 1 ? state.ongoingTrips : state.completedTrips);
+                      : (_selectedTab == 1
+                            ? state.ongoingTrips
+                            : state.completedTrips);
 
                   if (list.isEmpty) {
                     return _buildEmptyState();
@@ -123,7 +127,10 @@ class _TripsViewState extends State<TripsView> {
 
                   return ListView.builder(
                     itemCount: list.length,
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 16,
+                    ),
                     itemBuilder: (context, index) {
                       final trip = list[index];
                       return _buildTripCard(context, trip);
@@ -149,7 +156,9 @@ class _TripsViewState extends State<TripsView> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: isCompleted ? Colors.green.withValues(alpha: 0.3) : Colors.blue.withValues(alpha: 0.3),
+          color: isCompleted
+              ? Colors.green.withValues(alpha: 0.3)
+              : Colors.blue.withValues(alpha: 0.3),
         ),
       ),
       child: Padding(
@@ -264,10 +273,7 @@ class _TripsViewState extends State<TripsView> {
         const SizedBox(height: 2),
         Text(
           value,
-          style: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.bold,
-          ),
+          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
         ),
       ],
     );
@@ -278,7 +284,9 @@ class _TripsViewState extends State<TripsView> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: isCompleted ? Colors.green.withValues(alpha: 0.12) : Colors.blue.withValues(alpha: 0.15),
+        color: isCompleted
+            ? Colors.green.withValues(alpha: 0.12)
+            : Colors.blue.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(

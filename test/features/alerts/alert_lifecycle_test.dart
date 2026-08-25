@@ -24,13 +24,17 @@ void main() {
     final now = DateTime.now();
 
     setUp(() async {
-      tempDbPath = 'test_alerts_${DateTime.now().millisecondsSinceEpoch}.duckdb';
+      tempDbPath =
+          'test_alerts_${DateTime.now().millisecondsSinceEpoch}.duckdb';
       dbClient = DuckDbClient();
       await dbClient.init(tempDbPath);
 
       eventBus = DatabaseEventBus();
       alertDS = AlertLocalDataSourceImpl(dbClient: dbClient);
-      alertRepo = AlertRepositoryImpl(localDataSource: alertDS, eventBus: eventBus);
+      alertRepo = AlertRepositoryImpl(
+        localDataSource: alertDS,
+        eventBus: eventBus,
+      );
 
       evaluateAlerts = EvaluateAlertsUseCase(alertRepo);
       updateAlertStatus = UpdateAlertStatusUseCase(alertRepo);
@@ -71,181 +75,199 @@ void main() {
       expect(active.first.severityLabel, 'WARNING');
     });
 
-    test('2. SOC 8% escalates existing SOC alert to CRITICAL without creating a second alert', () async {
-      final p1 = TelemetryPacket(
-        packetId: 'p1',
-        vehicleId: 'EV-101',
-        eventTimestamp: now.subtract(const Duration(minutes: 2)),
-        ingestTimestamp: now,
-        latitude: 12.97,
-        longitude: 77.59,
-        speed: 0.0,
-        batteryLevel: 19.0,
-        batteryTemp: 30.0,
-        odometerKm: 1000.0,
-        ignition: false,
-      );
+    test(
+      '2. SOC 8% escalates existing SOC alert to CRITICAL without creating a second alert',
+      () async {
+        final p1 = TelemetryPacket(
+          packetId: 'p1',
+          vehicleId: 'EV-101',
+          eventTimestamp: now.subtract(const Duration(minutes: 2)),
+          ingestTimestamp: now,
+          latitude: 12.97,
+          longitude: 77.59,
+          speed: 0.0,
+          batteryLevel: 19.0,
+          batteryTemp: 30.0,
+          odometerKm: 1000.0,
+          ignition: false,
+        );
 
-      await evaluateAlerts([p1]);
+        await evaluateAlerts([p1]);
 
-      final p2 = TelemetryPacket(
-        packetId: 'p2',
-        vehicleId: 'EV-101',
-        eventTimestamp: now.subtract(const Duration(seconds: 30)),
-        ingestTimestamp: now,
-        latitude: 12.97,
-        longitude: 77.59,
-        speed: 0.0,
-        batteryLevel: 8.0, // Critical
-        batteryTemp: 30.0,
-        odometerKm: 1000.0,
-        ignition: false,
-      );
+        final p2 = TelemetryPacket(
+          packetId: 'p2',
+          vehicleId: 'EV-101',
+          eventTimestamp: now.subtract(const Duration(seconds: 30)),
+          ingestTimestamp: now,
+          latitude: 12.97,
+          longitude: 77.59,
+          speed: 0.0,
+          batteryLevel: 8.0, // Critical
+          batteryTemp: 30.0,
+          odometerKm: 1000.0,
+          ignition: false,
+        );
 
-      await evaluateAlerts([p2]);
+        await evaluateAlerts([p2]);
 
-      final active = await alertRepo.getActiveAlerts();
-      expect(active.length, 1); // Single SOC alert!
-      expect(active.first.id, 'alert_soc_EV-101');
-      expect(active.first.type, AlertType.criticalBattery);
-      expect(active.first.status, AlertStatus.escalated);
-      expect(active.first.severityLabel, 'CRITICAL');
-    });
+        final active = await alertRepo.getActiveAlerts();
+        expect(active.length, 1); // Single SOC alert!
+        expect(active.first.id, 'alert_soc_EV-101');
+        expect(active.first.type, AlertType.criticalBattery);
+        expect(active.first.status, AlertStatus.escalated);
+        expect(active.first.severityLabel, 'CRITICAL');
+      },
+    );
 
-    test('3. Temperature > 45°C creates Overheating alert alongside SOC alert', () async {
-      final p1 = TelemetryPacket(
-        packetId: 'p1',
-        vehicleId: 'EV-101',
-        eventTimestamp: now.subtract(const Duration(seconds: 30)),
-        ingestTimestamp: now,
-        latitude: 12.97,
-        longitude: 77.59,
-        speed: 50.0,
-        batteryLevel: 15.0,
-        batteryTemp: 48.0, // Overheating
-        odometerKm: 1000.0,
-        ignition: true,
-      );
+    test(
+      '3. Temperature > 45°C creates Overheating alert alongside SOC alert',
+      () async {
+        final p1 = TelemetryPacket(
+          packetId: 'p1',
+          vehicleId: 'EV-101',
+          eventTimestamp: now.subtract(const Duration(seconds: 30)),
+          ingestTimestamp: now,
+          latitude: 12.97,
+          longitude: 77.59,
+          speed: 50.0,
+          batteryLevel: 15.0,
+          batteryTemp: 48.0, // Overheating
+          odometerKm: 1000.0,
+          ignition: true,
+        );
 
-      await evaluateAlerts([p1]);
+        await evaluateAlerts([p1]);
 
-      final active = await alertRepo.getActiveAlerts();
-      expect(active.length, 2); // SOC alert AND Overheating alert co-existing!
-      expect(active.any((a) => a.type == AlertType.lowBattery), isTrue);
-      expect(active.any((a) => a.type == AlertType.overheating), isTrue);
-    });
+        final active = await alertRepo.getActiveAlerts();
+        expect(
+          active.length,
+          2,
+        ); // SOC alert AND Overheating alert co-existing!
+        expect(active.any((a) => a.type == AlertType.lowBattery), isTrue);
+        expect(active.any((a) => a.type == AlertType.overheating), isTrue);
+      },
+    );
 
-    test('4. Stale telemetry (>10m old) does not create or escalate alerts', () async {
-      final stalePacket = TelemetryPacket(
-        packetId: 'p_stale',
-        vehicleId: 'EV-101',
-        eventTimestamp: now.subtract(const Duration(minutes: 15)),
-        ingestTimestamp: now,
-        latitude: 12.97,
-        longitude: 77.59,
-        speed: 0.0,
-        batteryLevel: 5.0,
-        batteryTemp: 50.0,
-        odometerKm: 1000.0,
-        ignition: false,
-      );
+    test(
+      '4. Stale telemetry (>10m old) does not create or escalate alerts',
+      () async {
+        final stalePacket = TelemetryPacket(
+          packetId: 'p_stale',
+          vehicleId: 'EV-101',
+          eventTimestamp: now.subtract(const Duration(minutes: 15)),
+          ingestTimestamp: now,
+          latitude: 12.97,
+          longitude: 77.59,
+          speed: 0.0,
+          batteryLevel: 5.0,
+          batteryTemp: 50.0,
+          odometerKm: 1000.0,
+          ignition: false,
+        );
 
-      await evaluateAlerts([stalePacket]);
+        await evaluateAlerts([stalePacket]);
 
-      final active = await alertRepo.getActiveAlerts();
-      expect(active, isEmpty);
-    });
+        final active = await alertRepo.getActiveAlerts();
+        expect(active, isEmpty);
+      },
+    );
 
-    test('5. Alert dismissal persists dismissal reason and allows UNDO', () async {
-      final p1 = TelemetryPacket(
-        packetId: 'p1',
-        vehicleId: 'EV-101',
-        eventTimestamp: now.subtract(const Duration(seconds: 30)),
-        ingestTimestamp: now,
-        latitude: 12.97,
-        longitude: 77.59,
-        speed: 0.0,
-        batteryLevel: 15.0,
-        batteryTemp: 30.0,
-        odometerKm: 1000.0,
-        ignition: false,
-      );
+    test(
+      '5. Alert dismissal persists dismissal reason and allows UNDO',
+      () async {
+        final p1 = TelemetryPacket(
+          packetId: 'p1',
+          vehicleId: 'EV-101',
+          eventTimestamp: now.subtract(const Duration(seconds: 30)),
+          ingestTimestamp: now,
+          latitude: 12.97,
+          longitude: 77.59,
+          speed: 0.0,
+          batteryLevel: 15.0,
+          batteryTemp: 30.0,
+          odometerKm: 1000.0,
+          ignition: false,
+        );
 
-      await evaluateAlerts([p1]);
+        await evaluateAlerts([p1]);
 
-      final activeBefore = await alertRepo.getActiveAlerts();
-      final alertId = activeBefore.first.id;
+        final activeBefore = await alertRepo.getActiveAlerts();
+        final alertId = activeBefore.first.id;
 
-      // Dismiss with reason
-      await updateAlertStatus(
-        UpdateAlertStatusParams(
-          alertId: alertId,
-          status: AlertStatus.dismissed,
-          dismissalReason: 'I am on it',
-        ),
-      );
+        // Dismiss with reason
+        await updateAlertStatus(
+          UpdateAlertStatusParams(
+            alertId: alertId,
+            status: AlertStatus.dismissed,
+            dismissalReason: 'I am on it',
+          ),
+        );
 
-      final activeAfterDismiss = await alertRepo.getActiveAlerts();
-      expect(activeAfterDismiss, isEmpty);
+        final activeAfterDismiss = await alertRepo.getActiveAlerts();
+        expect(activeAfterDismiss, isEmpty);
 
-      final allAlerts = await alertRepo.getAllAlerts();
-      expect(allAlerts.first.status, AlertStatus.dismissed);
-      expect(allAlerts.first.dismissalReason, 'I am on it');
+        final allAlerts = await alertRepo.getAllAlerts();
+        expect(allAlerts.first.status, AlertStatus.dismissed);
+        expect(allAlerts.first.dismissalReason, 'I am on it');
 
-      // Execute UNDO
-      await undoAlertDismissal(alertId);
+        // Execute UNDO
+        await undoAlertDismissal(alertId);
 
-      final activeAfterUndo = await alertRepo.getActiveAlerts();
-      expect(activeAfterUndo.length, 1);
-      expect(activeAfterUndo.first.status, AlertStatus.active);
-      expect(activeAfterUndo.first.dismissalReason, isNull);
-    });
+        final activeAfterUndo = await alertRepo.getActiveAlerts();
+        expect(activeAfterUndo.length, 1);
+        expect(activeAfterUndo.first.status, AlertStatus.active);
+        expect(activeAfterUndo.first.dismissalReason, isNull);
+      },
+    );
 
-    test('6. Condition clearing resolves active AND dismissed alerts independently', () async {
-      final p1 = TelemetryPacket(
-        packetId: 'p1',
-        vehicleId: 'EV-101',
-        eventTimestamp: now.subtract(const Duration(minutes: 5)),
-        ingestTimestamp: now,
-        latitude: 12.97,
-        longitude: 77.59,
-        speed: 0.0,
-        batteryLevel: 15.0,
-        batteryTemp: 30.0,
-        odometerKm: 1000.0,
-        ignition: false,
-      );
+    test(
+      '6. Condition clearing resolves active AND dismissed alerts independently',
+      () async {
+        final p1 = TelemetryPacket(
+          packetId: 'p1',
+          vehicleId: 'EV-101',
+          eventTimestamp: now.subtract(const Duration(minutes: 5)),
+          ingestTimestamp: now,
+          latitude: 12.97,
+          longitude: 77.59,
+          speed: 0.0,
+          batteryLevel: 15.0,
+          batteryTemp: 30.0,
+          odometerKm: 1000.0,
+          ignition: false,
+        );
 
-      await evaluateAlerts([p1]);
+        await evaluateAlerts([p1]);
 
-      // User dismisses alert
-      await updateAlertStatus(
-        UpdateAlertStatusParams(
-          alertId: 'alert_soc_EV-101',
-          status: AlertStatus.dismissed,
-          dismissalReason: 'Wrong alert',
-        ),
-      );
+        // User dismisses alert
+        await updateAlertStatus(
+          UpdateAlertStatusParams(
+            alertId: 'alert_soc_EV-101',
+            status: AlertStatus.dismissed,
+            dismissalReason: 'Wrong alert',
+          ),
+        );
 
-      // Vehicle recovers battery level (>20%)
-      final p2 = TelemetryPacket(
-        packetId: 'p2',
-        vehicleId: 'EV-101',
-        eventTimestamp: now.subtract(const Duration(seconds: 30)),
-        ingestTimestamp: now,
-        latitude: 12.97,
-        longitude: 77.59,
-        speed: 0.0,
-        batteryLevel: 25.0, // Recovered!
-        batteryTemp: 30.0,
-        odometerKm: 1000.0,
-        ignition: false,
-      );
+        // Vehicle recovers battery level (>20%)
+        final p2 = TelemetryPacket(
+          packetId: 'p2',
+          vehicleId: 'EV-101',
+          eventTimestamp: now.subtract(const Duration(seconds: 30)),
+          ingestTimestamp: now,
+          latitude: 12.97,
+          longitude: 77.59,
+          speed: 0.0,
+          batteryLevel: 25.0, // Recovered!
+          batteryTemp: 30.0,
+          odometerKm: 1000.0,
+          ignition: false,
+        );
 
-      await evaluateAlerts([p2]);
+        await evaluateAlerts([p2]);
 
-      final all = await alertRepo.getAllAlerts();
-      expect(all.first.status, AlertStatus.resolved);
-    });
+        final all = await alertRepo.getAllAlerts();
+        expect(all.first.status, AlertStatus.resolved);
+      },
+    );
   });
 }

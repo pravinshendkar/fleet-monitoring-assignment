@@ -21,11 +21,11 @@ class GeofenceEvent extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        vehicleId,
-        geofenceId,
-        type,
-        eventTimestamp,
-        packetId,
-      ];
+    id,
+    vehicleId,
+    geofenceId,
+    type,
+    eventTimestamp,
+    packetId,
+  ];
 }

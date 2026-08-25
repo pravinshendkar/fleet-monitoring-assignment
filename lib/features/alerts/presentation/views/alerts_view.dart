@@ -30,10 +30,7 @@ class _AlertsViewState extends State<AlertsView> {
           children: [
             Icon(Icons.warning_amber_rounded, color: Colors.amber),
             SizedBox(width: 8),
-            Text(
-              'Fleet Alerts',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
+            Text('Fleet Alerts', style: TextStyle(fontWeight: FontWeight.bold)),
           ],
         ),
         actions: [
@@ -110,12 +107,17 @@ class _AlertsViewState extends State<AlertsView> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                          const Icon(
+                            Icons.error_outline,
+                            color: Colors.red,
+                            size: 48,
+                          ),
                           const SizedBox(height: 12),
                           Text(state.message, textAlign: TextAlign.center),
                           const SizedBox(height: 16),
                           ElevatedButton.icon(
-                            onPressed: () => context.read<AlertsCubit>().loadAlerts(),
+                            onPressed: () =>
+                                context.read<AlertsCubit>().loadAlerts(),
                             icon: const Icon(Icons.refresh),
                             label: const Text('Retry'),
                           ),
@@ -126,7 +128,9 @@ class _AlertsViewState extends State<AlertsView> {
                 }
 
                 if (state is AlertsLoaded) {
-                  final list = _selectedTab == 0 ? state.activeAlerts : state.allAlerts;
+                  final list = _selectedTab == 0
+                      ? state.activeAlerts
+                      : state.allAlerts;
 
                   if (list.isEmpty) {
                     return _buildEmptyState();
@@ -134,7 +138,10 @@ class _AlertsViewState extends State<AlertsView> {
 
                   return ListView.builder(
                     itemCount: list.length,
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 16,
+                    ),
                     itemBuilder: (context, index) {
                       final alert = list[index];
                       return _buildAlertCard(context, alert);
@@ -163,7 +170,9 @@ class _AlertsViewState extends State<AlertsView> {
         side: BorderSide(
           color: isDismissed
               ? Colors.grey.withValues(alpha: 0.2)
-              : (alert.isCritical ? Colors.red.withValues(alpha: 0.3) : Colors.amber.withValues(alpha: 0.3)),
+              : (alert.isCritical
+                    ? Colors.red.withValues(alpha: 0.3)
+                    : Colors.amber.withValues(alpha: 0.3)),
         ),
       ),
       child: Padding(
@@ -178,8 +187,12 @@ class _AlertsViewState extends State<AlertsView> {
                 Row(
                   children: [
                     Icon(
-                      alert.isCritical ? Icons.error : Icons.warning_amber_rounded,
-                      color: isDismissed ? Colors.grey : (alert.isCritical ? Colors.red : Colors.amber[800]),
+                      alert.isCritical
+                          ? Icons.error
+                          : Icons.warning_amber_rounded,
+                      color: isDismissed
+                          ? Colors.grey
+                          : (alert.isCritical ? Colors.red : Colors.amber[800]),
                       size: 20,
                     ),
                     const SizedBox(width: 8),
@@ -209,23 +222,27 @@ class _AlertsViewState extends State<AlertsView> {
 
             Text(
               'Current reading: ${_formatValue(alert)} (Threshold: ${_formatThreshold(alert)})',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
             ),
 
             if (isDismissed && alert.dismissalReason != null) ...[
               const SizedBox(height: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.grey[200],
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
                   'Dismissal reason: "${alert.dismissalReason}"',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[700], fontStyle: FontStyle.italic),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[700],
+                    fontStyle: FontStyle.italic,
+                  ),
                 ),
               ),
             ],
@@ -270,7 +287,11 @@ class _AlertsViewState extends State<AlertsView> {
         ),
         child: const Text(
           'RESOLVED',
-          style: TextStyle(color: Colors.green, fontSize: 10, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Colors.green,
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       );
     }
@@ -284,7 +305,11 @@ class _AlertsViewState extends State<AlertsView> {
         ),
         child: const Text(
           'DISMISSED',
-          style: TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Colors.grey,
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       );
     }
@@ -293,7 +318,9 @@ class _AlertsViewState extends State<AlertsView> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: isCrit ? Colors.red.withValues(alpha: 0.12) : Colors.amber.withValues(alpha: 0.15),
+        color: isCrit
+            ? Colors.red.withValues(alpha: 0.12)
+            : Colors.amber.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Text(
@@ -330,7 +357,11 @@ class _AlertsViewState extends State<AlertsView> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.check_circle_outline, size: 64, color: Colors.green[400]),
+            Icon(
+              Icons.check_circle_outline,
+              size: 64,
+              color: Colors.green[400],
+            ),
             const SizedBox(height: 16),
             const Text(
               'No Alerts Detected',
@@ -352,7 +383,9 @@ class _AlertsViewState extends State<AlertsView> {
     switch (alert.type) {
       case AlertType.lowBattery:
       case AlertType.criticalBattery:
-        return alert.isCritical ? 'Critical Low Battery Alert' : 'Low Battery Warning';
+        return alert.isCritical
+            ? 'Critical Low Battery Alert'
+            : 'Low Battery Warning';
       case AlertType.overheating:
         return 'Battery Overheating Alert';
     }
