@@ -1,0 +1,103 @@
+import 'dart:io';
+import 'package:fleet_console/core/database/database_event_bus.dart';
+import 'package:fleet_console/core/database/duckdb_client.dart';
+import 'package:fleet_console/core/database/seed_data_generator.dart';
+import 'package:fleet_console/core/database/seed_data_service.dart';
+import 'package:fleet_console/features/alerts/data/datasources/alert_local_datasource.dart';
+import 'package:fleet_console/features/alerts/data/repositories/alert_repository_impl.dart';
+import 'package:fleet_console/features/alerts/domain/usecases/evaluate_alerts.dart';
+import 'package:fleet_console/features/fleet/data/datasources/telemetry_local_datasource.dart';
+import 'package:fleet_console/features/fleet/data/datasources/vehicle_local_datasource.dart';
+import 'package:fleet_console/features/fleet/data/repositories/telemetry_repository_impl.dart';
+import 'package:fleet_console/features/fleet/domain/usecases/process_telemetry_batch.dart';
+import 'package:fleet_console/features/geofences/data/datasources/geofence_local_datasource.dart';
+import 'package:fleet_console/features/geofences/data/repositories/geofence_repository_impl.dart';
+import 'package:fleet_console/features/geofences/domain/usecases/create_geofence.dart';
+import 'package:fleet_console/features/geofences/domain/usecases/detect_geofence_transitions.dart';
+import 'package:fleet_console/features/trips/data/datasources/trip_local_datasource.dart';
+import 'package:fleet_console/features/trips/data/repositories/trip_repository_impl.dart';
+import 'package:fleet_console/features/trips/domain/usecases/process_trips.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+void main() {
+  group('SeedData Generator & Service Tests', () {
+    late DuckDbClient client;
+    late String tempDbPath;
+    late DatabaseEventBus eventBus;
+
+    setUp(() async {
+      tempDbPath = 'test_seed_${DateTime.now().millisecondsSinceEpoch}.duckdb';
+      client = DuckDbClient();
+      await client.init(tempDbPath);
+      eventBus = DatabaseEventBus();
+    });
+
+    tearDown(() async {
+      eventBus.dispose();
+      await client.close();
+      final file = File(tempDbPath);
+      if (await file.exists()) {
+        await file.delete();
+      }
+    });
+
+    test('1. SeedDataGenerator produces 500 vehicles with deterministic distribution', () {
+      final packets = SeedDataGenerator.generateSeedTelemetry(vehicleCount: 500);
+      expect(packets.length, 500);
+
+      final uniqueVehicles = packets.map((p) => p.vehicleId).toSet();
+      expect(uniqueVehicles.length, 500);
+
+      final lowBatteryCount = packets.where((p) => p.batteryLevel <= 20.0).length;
+      expect(lowBatteryCount, greaterThan(0));
+
+      final overheatingCount = packets.where((p) => p.batteryTemp > 45.0).length;
+      expect(overheatingCount, greaterThan(0));
+    });
+
+    test('2. SeedDataService seeds DuckDB deterministically', () async {
+      final telemetryDS = TelemetryLocalDataSourceImpl(dbClient: client);
+      final vehicleDS = VehicleLocalDataSourceImpl(dbClient: client);
+      final alertDS = AlertLocalDataSourceImpl(dbClient: client);
+      final geofenceDS = GeofenceLocalDataSourceImpl(dbClient: client);
+      final tripDS = TripLocalDataSourceImpl(dbClient: client);
+
+      // Repositories
+      final telemetryRepo = TelemetryRepositoryImpl(localDataSource: telemetryDS, eventBus: eventBus);
+      final alertRepo = AlertRepositoryImpl(localDataSource: alertDS, eventBus: eventBus);
+      final geofenceRepo = GeofenceRepositoryImpl(localDataSource: geofenceDS, eventBus: eventBus);
+      final tripRepo = TripRepositoryImpl(localDataSource: tripDS, eventBus: eventBus);
+
+      // Use cases
+      final evalAlerts = EvaluateAlertsUseCase(alertRepo);
+      final detectTransitions = DetectGeofenceTransitionsUseCase(geofenceRepo);
+      final processTrips = ProcessTripsUseCase(tripRepo);
+      final createGeofence = CreateGeofenceUseCase(geofenceRepo);
+
+      final processBatch = ProcessTelemetryBatchUseCase(
+        telemetryRepository: telemetryRepo,
+        evaluateAlertsUseCase: evalAlerts,
+        detectGeofenceTransitionsUseCase: detectTransitions,
+        processTripsUseCase: processTrips,
+      );
+
+      final seedService = SeedDataService(
+        dbClient: client,
+        processTelemetryBatchUseCase: processBatch,
+        createGeofenceUseCase: createGeofence,
+      );
+
+      await seedService.seedIfEmpty(vehicleCount: 500);
+
+      final summary = await vehicleDS.getFleetSummary();
+      expect(summary.totalVehicles, 500);
+      expect(summary.movingCount, greaterThan(0));
+      expect(summary.idleCount, greaterThan(0));
+      expect(summary.stoppedCount, greaterThan(0));
+      expect(summary.offlineCount, greaterThan(0));
+
+      final geofences = await geofenceDS.getGeofences();
+      expect(geofences.length, 3);
+    });
+  });
+}
