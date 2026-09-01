@@ -103,8 +103,8 @@ class AlertLocalDataSourceImpl implements AlertLocalDataSource {
       final vid = packet.vehicleId.replaceAll("'", "''");
 
       // 1. Low Battery Threshold Evaluation (< 20%)
-      if (packet.batteryLevel <= 20.0) {
-        final isCritical = packet.batteryLevel <= 10.0;
+      if (packet.batteryLevel != null && packet.batteryLevel! <= 20.0) {
+        final isCritical = packet.batteryLevel! <= 10.0;
         final alertType = isCritical
             ? AlertType.criticalBattery
             : AlertType.lowBattery;
@@ -118,7 +118,7 @@ class AlertLocalDataSourceImpl implements AlertLocalDataSource {
           INSERT INTO alerts (
             alert_id, vehicle_id, type, status, trigger_value, threshold, created_at, updated_at
           ) VALUES (
-            '$alertId', '$vid', '${alertType.name}', '${alertStatus.name}', ${packet.batteryLevel}, 20.0, '$now', '$now'
+            '$alertId', '$vid', '${alertType.name}', '${alertStatus.name}', ${packet.batteryLevel!}, 20.0, '$now', '$now'
           )
           ON CONFLICT (alert_id) DO UPDATE SET
             type = EXCLUDED.type,
@@ -130,7 +130,7 @@ class AlertLocalDataSourceImpl implements AlertLocalDataSource {
             updated_at = EXCLUDED.updated_at;
         ''';
         await dbClient.execute(sql);
-      } else {
+      } else if (packet.batteryLevel != null) {
         // Condition cleared (battery > 20%): resolve alert whether active, escalated, or dismissed!
         final alertId = 'alert_soc_$vid';
         final resolveSql =
@@ -143,14 +143,14 @@ class AlertLocalDataSourceImpl implements AlertLocalDataSource {
       }
 
       // 2. Overheating Threshold Evaluation (> 45°C)
-      if (packet.batteryTemp > 45.0) {
+      if (packet.batteryTemp != null && packet.batteryTemp! > 45.0) {
         final alertId = 'alert_temp_$vid';
         final sql =
             '''
           INSERT INTO alerts (
             alert_id, vehicle_id, type, status, trigger_value, threshold, created_at, updated_at
           ) VALUES (
-            '$alertId', '$vid', 'overheating', 'active', ${packet.batteryTemp}, 45.0, '$now', '$now'
+            '$alertId', '$vid', 'overheating', 'active', ${packet.batteryTemp!}, 45.0, '$now', '$now'
           )
           ON CONFLICT (alert_id) DO UPDATE SET
             status = CASE
@@ -161,7 +161,7 @@ class AlertLocalDataSourceImpl implements AlertLocalDataSource {
             updated_at = EXCLUDED.updated_at;
         ''';
         await dbClient.execute(sql);
-      } else {
+      } else if (packet.batteryTemp != null) {
         // Condition cleared (battery temp <= 45°C): resolve alert whether active or dismissed!
         final alertId = 'alert_temp_$vid';
         final resolveSql =

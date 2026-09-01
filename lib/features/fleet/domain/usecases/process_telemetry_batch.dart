@@ -33,16 +33,18 @@ class ProcessTelemetryBatchUseCase
     final sortedPackets = List<TelemetryPacket>.from(params.packets)
       ..sort((a, b) => a.eventTimestamp.compareTo(b.eventTimestamp));
 
-    // 2. Persist telemetry batch in DuckDB
-    await telemetryRepository.ingestBatch(sortedPackets);
-
-    // 3. Orchestrate alert evaluation
+    // 2. Orchestrate alert evaluation (BEFORE ingest so it can check previous DB state)
     await evaluateAlertsUseCase(sortedPackets);
 
-    // 4. Orchestrate geofence transition detection
+    // 3. Orchestrate geofence transition detection (BEFORE ingest)
     final transitionEvents = await detectGeofenceTransitionsUseCase(
-      DetectGeofenceTransitionsParams(packets: sortedPackets),
+      DetectGeofenceTransitionsParams(
+        packets: sortedPackets,
+      ),
     );
+
+    // 4. Persist telemetry batch in DuckDB
+    await telemetryRepository.ingestBatch(sortedPackets);
 
     // 5. Orchestrate idempotent trip creation / completion
     if (transitionEvents.isNotEmpty) {

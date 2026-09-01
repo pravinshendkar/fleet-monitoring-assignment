@@ -121,8 +121,8 @@ void main() {
       expect(result.socSignal.displayValue, '85%');
       expect(result.socSignal.verdict, SignalVerdict.normal);
 
-      expect(result.rangeSignal.displayValue, '255 km');
-      expect(result.rangeSignal.verdict, SignalVerdict.normal);
+      expect(result.rangeSignal.displayValue, '—');
+      expect(result.rangeSignal.verdict, SignalVerdict.none);
 
       expect(result.speedSignal.displayValue, '42.0 km/h');
       expect(result.speedSignal.verdict, SignalVerdict.normal);

@@ -2,6 +2,8 @@ import 'package:fleet_console/features/alerts/domain/entities/alert.dart';
 import 'package:fleet_console/features/alerts/domain/repositories/alert_repository.dart';
 import 'package:fleet_console/features/alerts/domain/usecases/evaluate_alerts.dart';
 import 'package:fleet_console/features/fleet/domain/entities/telemetry_packet.dart';
+import 'package:fleet_console/features/fleet/domain/entities/vehicle.dart';
+import 'package:fleet_console/features/fleet/domain/repositories/vehicle_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class MockAlertRepository implements AlertRepository {
@@ -29,6 +31,14 @@ class MockAlertRepository implements AlertRepository {
   }) async {}
 }
 
+class MockVehicleRepository implements VehicleRepository {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+
+  @override
+  Future<Vehicle?> getVehicleById(String id) async => null;
+}
+
 void main() {
   group('EvaluateAlertsUseCase Tests', () {
     late MockAlertRepository alertRepository;
@@ -36,7 +46,7 @@ void main() {
 
     setUp(() {
       alertRepository = MockAlertRepository();
-      useCase = EvaluateAlertsUseCase(alertRepository);
+      useCase = EvaluateAlertsUseCase(alertRepository, MockVehicleRepository());
     });
 
     test(

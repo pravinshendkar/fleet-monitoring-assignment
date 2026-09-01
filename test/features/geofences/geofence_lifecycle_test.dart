@@ -2,6 +2,8 @@ import 'dart:io';
 import 'package:fleet_console/core/database/database_event_bus.dart';
 import 'package:fleet_console/core/database/duckdb_client.dart';
 import 'package:fleet_console/features/fleet/data/datasources/telemetry_local_datasource.dart';
+import 'package:fleet_console/features/fleet/data/datasources/vehicle_local_datasource.dart';
+import 'package:fleet_console/features/fleet/data/repositories/vehicle_repository_impl.dart';
 import 'package:fleet_console/features/fleet/data/models/telemetry_packet_model.dart';
 import 'package:fleet_console/features/fleet/domain/entities/telemetry_packet.dart';
 import 'package:fleet_console/features/geofences/data/datasources/geofence_local_datasource.dart';
@@ -42,10 +44,16 @@ void main() {
         eventBus: eventBus,
       );
 
+      final vehicleDS = VehicleLocalDataSourceImpl(dbClient: dbClient);
+      final vehicleRepo = VehicleRepositoryImpl(
+        localDataSource: vehicleDS,
+        eventBus: eventBus,
+      );
+
       createGeofence = CreateGeofenceUseCase(geofenceRepo);
       updateGeofence = UpdateGeofenceUseCase(geofenceRepo);
       deactivateGeofence = DeactivateGeofenceUseCase(geofenceRepo);
-      detectTransitions = DetectGeofenceTransitionsUseCase(geofenceRepo);
+      detectTransitions = DetectGeofenceTransitionsUseCase(geofenceRepo, vehicleRepo);
     });
 
     tearDown(() async {

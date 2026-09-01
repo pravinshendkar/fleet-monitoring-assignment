@@ -61,73 +61,74 @@ class GetVehicleDetailsUseCase
       limit: 100,
     );
 
-    if (history.isEmpty) {
-      if (vehicle == null) {
-        return VehicleDetailsResult(
-          vehicle: null,
-          socSignal: _noneSignal('SOC'),
-          rangeSignal: _noneSignal('Range'),
-          speedSignal: _noneSignal('Speed'),
-          tempSignal: _noneSignal('Battery Temp'),
-          odometerSignal: _noneSignal('Odometer'),
-          lastPingSignal: _noneSignal('Last Ping'),
-          socHistory: const [],
-          telemetryHistory: const [],
-        );
-      }
-
-      // If vehicle exists in DuckDB table but has no telemetry packet log yet
-      final isStale = vehicle.isStale;
-      final socVerdict = isStale
-          ? SignalVerdict.stale
-          : (vehicle.lastSoc < 20.0
-                ? SignalVerdict.alert
-                : SignalVerdict.normal);
-
+    if (vehicle == null && history.isEmpty) {
       return VehicleDetailsResult(
-        vehicle: vehicle,
-        socSignal: SignalReading(
-          label: 'SOC',
-          displayValue: '${vehicle.lastSoc.toStringAsFixed(0)}%',
-          timestamp: vehicle.lastSeenAt,
-          verdict: socVerdict,
-          alertMessage: vehicle.lastSoc < 20.0 ? 'Low Battery' : null,
-        ),
-        rangeSignal: SignalReading(
-          label: 'Range',
-          displayValue: '${(vehicle.lastSoc * 3.0).round()} km',
-          timestamp: vehicle.lastSeenAt,
-          verdict: isStale ? SignalVerdict.stale : SignalVerdict.normal,
-        ),
+        vehicle: null,
+        socSignal: _noneSignal('SOC'),
+        rangeSignal: _noneSignal('Range'),
         speedSignal: _noneSignal('Speed'),
         tempSignal: _noneSignal('Battery Temp'),
         odometerSignal: _noneSignal('Odometer'),
-        lastPingSignal: SignalReading(
-          label: 'Last Ping',
-          displayValue: _formatAge(vehicle.lastSeenAt),
-          timestamp: vehicle.lastSeenAt,
-          verdict: isStale ? SignalVerdict.stale : SignalVerdict.normal,
-        ),
+        lastPingSignal: _noneSignal('Last Ping'),
         socHistory: const [],
         telemetryHistory: const [],
       );
     }
 
-    // Process from latest telemetry packet
-    final latest = history.first;
+    final latest = history.isNotEmpty ? history.first : null;
     final now = DateTime.now();
-    final isStale =
-        now.difference(latest.eventTimestamp) > const Duration(minutes: 10);
+    bool isStale(DateTime? dt) =>
+        dt == null || now.difference(dt) > const Duration(minutes: 10);
+
+    bool useLatest(DateTime? vehicleSignalAt) {
+      if (latest == null) return false;
+      if (vehicleSignalAt == null) return true;
+      return latest.eventTimestamp.isAfter(vehicleSignalAt);
+    }
+
+    final socVal = useLatest(vehicle?.lastSocAt)
+        ? latest?.batteryLevel
+        : (vehicle?.lastSoc ?? latest?.batteryLevel);
+    final socTime = useLatest(vehicle?.lastSocAt)
+        ? latest?.eventTimestamp
+        : (vehicle?.lastSocAt ?? latest?.eventTimestamp);
+
+    final speedVal = useLatest(vehicle?.lastSpeedAt)
+        ? latest?.speed
+        : (vehicle?.lastSpeed ?? latest?.speed);
+    final speedTime = useLatest(vehicle?.lastSpeedAt)
+        ? latest?.eventTimestamp
+        : (vehicle?.lastSpeedAt ?? latest?.eventTimestamp);
+
+    final tempVal = useLatest(vehicle?.lastTempAt)
+        ? latest?.batteryTemp
+        : (vehicle?.lastTemp ?? latest?.batteryTemp);
+    final tempTime = useLatest(vehicle?.lastTempAt)
+        ? latest?.eventTimestamp
+        : (vehicle?.lastTempAt ?? latest?.eventTimestamp);
+
+    final odoVal = useLatest(vehicle?.lastOdometerAt)
+        ? latest?.odometerKm
+        : (vehicle?.lastOdometer ?? latest?.odometerKm);
+    final odoTime = useLatest(vehicle?.lastOdometerAt)
+        ? latest?.eventTimestamp
+        : (vehicle?.lastOdometerAt ?? latest?.eventTimestamp);
+
+    final lastSeen = useLatest(vehicle?.lastSeenAt)
+        ? latest?.eventTimestamp
+        : (vehicle?.lastSeenAt ?? latest?.eventTimestamp);
 
     // SOC Signal
     SignalVerdict socVerdict;
     String? socAlert;
-    if (isStale) {
+    if (socVal == null) {
+      socVerdict = SignalVerdict.none;
+    } else if (isStale(socTime)) {
       socVerdict = SignalVerdict.stale;
-    } else if (latest.batteryLevel < 10.0) {
+    } else if (socVal < 10.0) {
       socVerdict = SignalVerdict.alert;
       socAlert = 'Critical Low Battery (<10%)';
-    } else if (latest.batteryLevel < 20.0) {
+    } else if (socVal < 20.0) {
       socVerdict = SignalVerdict.alert;
       socAlert = 'Low Battery Warning (<20%)';
     } else {
@@ -135,22 +136,24 @@ class GetVehicleDetailsUseCase
     }
 
     // Range Signal
-    final rangeKm = (latest.batteryLevel * 3.0).round();
-    final rangeVerdict = isStale
-        ? SignalVerdict.stale
-        : (latest.batteryLevel < 20.0
-              ? SignalVerdict.alert
-              : SignalVerdict.normal);
+    // Do not derive range artificially from SOC if missing
+    final rangeSignal = _noneSignal('Range');
 
     // Speed Signal
-    final speedVerdict = isStale ? SignalVerdict.stale : SignalVerdict.normal;
+    final speedVerdict = speedVal == null
+        ? SignalVerdict.none
+        : (isStale(speedTime)
+            ? SignalVerdict.stale
+            : SignalVerdict.normal);
 
     // Battery Temp Signal
     SignalVerdict tempVerdict;
     String? tempAlert;
-    if (isStale) {
+    if (tempVal == null) {
+      tempVerdict = SignalVerdict.none;
+    } else if (isStale(tempTime)) {
       tempVerdict = SignalVerdict.stale;
-    } else if (latest.batteryTemp > 45.0) {
+    } else if (tempVal > 45.0) {
       tempVerdict = SignalVerdict.alert;
       tempAlert = 'Overheating (>45°C)';
     } else {
@@ -158,56 +161,68 @@ class GetVehicleDetailsUseCase
     }
 
     // Odometer & Last Ping
-    final odoVerdict = isStale ? SignalVerdict.stale : SignalVerdict.normal;
-    final pingVerdict = isStale ? SignalVerdict.stale : SignalVerdict.normal;
+    final odoVerdict = odoVal == null
+        ? SignalVerdict.none
+        : (isStale(odoTime)
+            ? SignalVerdict.stale
+            : SignalVerdict.normal);
+            
+    final pingVerdict =
+        isStale(lastSeen) ? SignalVerdict.stale : SignalVerdict.normal;
 
     // SOC History Points (Chronological ASC)
     final socPoints = history
-        .map((p) => SocPoint(timestamp: p.eventTimestamp, soc: p.batteryLevel))
+        .where((p) => p.batteryLevel != null)
+        .map((p) => SocPoint(timestamp: p.eventTimestamp, soc: p.batteryLevel!))
         .toList()
         .reversed
         .toList();
 
     return VehicleDetailsResult(
       vehicle: vehicle,
-      socSignal: SignalReading(
-        label: 'SOC',
-        displayValue: '${latest.batteryLevel.toStringAsFixed(0)}%',
-        timestamp: latest.eventTimestamp,
-        verdict: socVerdict,
-        alertMessage: socAlert,
-      ),
-      rangeSignal: SignalReading(
-        label: 'Range',
-        displayValue: '$rangeKm km',
-        timestamp: latest.eventTimestamp,
-        verdict: rangeVerdict,
-      ),
-      speedSignal: SignalReading(
-        label: 'Speed',
-        displayValue: '${latest.speed.toStringAsFixed(1)} km/h',
-        timestamp: latest.eventTimestamp,
-        verdict: speedVerdict,
-      ),
-      tempSignal: SignalReading(
-        label: 'Battery Temp',
-        displayValue: '${latest.batteryTemp.toStringAsFixed(1)}°C',
-        timestamp: latest.eventTimestamp,
-        verdict: tempVerdict,
-        alertMessage: tempAlert,
-      ),
-      odometerSignal: SignalReading(
-        label: 'Odometer',
-        displayValue: '${latest.odometerKm.toStringAsFixed(1)} km',
-        timestamp: latest.eventTimestamp,
-        verdict: odoVerdict,
-      ),
-      lastPingSignal: SignalReading(
-        label: 'Last Ping',
-        displayValue: _formatAge(latest.eventTimestamp),
-        timestamp: latest.eventTimestamp,
-        verdict: pingVerdict,
-      ),
+      socSignal: socVal == null
+          ? _noneSignal('SOC')
+          : SignalReading(
+              label: 'SOC',
+              displayValue: '${socVal.toStringAsFixed(0)}%',
+              timestamp: socTime,
+              verdict: socVerdict,
+              alertMessage: socAlert,
+            ),
+      rangeSignal: rangeSignal,
+      speedSignal: speedVal == null
+          ? _noneSignal('Speed')
+          : SignalReading(
+              label: 'Speed',
+              displayValue: '${speedVal.toStringAsFixed(1)} km/h',
+              timestamp: speedTime,
+              verdict: speedVerdict,
+            ),
+      tempSignal: tempVal == null
+          ? _noneSignal('Battery Temp')
+          : SignalReading(
+              label: 'Battery Temp',
+              displayValue: '${tempVal.toStringAsFixed(1)}°C',
+              timestamp: tempTime,
+              verdict: tempVerdict,
+              alertMessage: tempAlert,
+            ),
+      odometerSignal: odoVal == null
+          ? _noneSignal('Odometer')
+          : SignalReading(
+              label: 'Odometer',
+              displayValue: '${odoVal.toStringAsFixed(1)} km',
+              timestamp: odoTime,
+              verdict: odoVerdict,
+            ),
+      lastPingSignal: lastSeen == null
+          ? _noneSignal('Last Ping')
+          : SignalReading(
+              label: 'Last Ping',
+              displayValue: _formatAge(lastSeen),
+              timestamp: lastSeen,
+              verdict: pingVerdict,
+            ),
       socHistory: socPoints,
       telemetryHistory: history,
     );

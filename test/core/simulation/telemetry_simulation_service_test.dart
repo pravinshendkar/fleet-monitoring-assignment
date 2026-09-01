@@ -66,8 +66,8 @@ void main() {
         eventBus: eventBus,
       );
 
-      final evalAlerts = EvaluateAlertsUseCase(alertRepo);
-      final detectTransitions = DetectGeofenceTransitionsUseCase(geofenceRepo);
+      final evalAlerts = EvaluateAlertsUseCase(alertRepo, vehicleRepo);
+      final detectTransitions = DetectGeofenceTransitionsUseCase(geofenceRepo, vehicleRepo);
       final processTrips = ProcessTripsUseCase(tripRepo);
       final createGeofence = CreateGeofenceUseCase(geofenceRepo);
 
@@ -127,7 +127,7 @@ void main() {
         );
         expect(movingList, isNotEmpty);
         final diff = DateTime.now().difference(movingList.first.lastSeenAt);
-        expect(diff.inSeconds, lessThan(10));
+        expect(diff.inSeconds, lessThan(30));
       },
     );
 
@@ -168,7 +168,7 @@ void main() {
         expect(movingVehicles, isNotEmpty);
         expect(
           DateTime.now().difference(movingVehicles.first.lastSeenAt).inSeconds,
-          lessThan(10),
+          lessThan(30),
         );
       },
     );

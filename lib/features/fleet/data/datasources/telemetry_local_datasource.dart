@@ -42,7 +42,7 @@ class TelemetryLocalDataSourceImpl implements TelemetryLocalDataSource {
               final ingestTs = p.ingestTimestamp.toUtc().toIso8601String();
               final pid = p.packetId.replaceAll("'", "''");
               final vid = p.vehicleId.replaceAll("'", "''");
-              return "('$pid', '$vid', '$eventTs', '$ingestTs', ${p.latitude}, ${p.longitude}, ${p.speed}, ${p.batteryLevel}, ${p.batteryTemp}, ${p.odometerKm}, ${p.ignition}, ${p.gpsAccuracy})";
+              return "('$pid', '$vid', '$eventTs', '$ingestTs', ${p.latitude ?? 'NULL'}, ${p.longitude ?? 'NULL'}, ${p.speed ?? 'NULL'}, ${p.batteryLevel ?? 'NULL'}, ${p.batteryTemp ?? 'NULL'}, ${p.odometerKm ?? 'NULL'}, ${p.ignition ?? 'NULL'}, ${p.gpsAccuracy ?? 'NULL'})";
             })
             .join(', ');
 
@@ -76,24 +76,40 @@ class TelemetryLocalDataSourceImpl implements TelemetryLocalDataSource {
 
         final status = Vehicle.calculateStatus(
           lastSeenAt: p.eventTimestamp,
-          speed: p.speed,
-          ignition: p.ignition,
+          speed: p.speed ?? 0.0,
+          ignition: p.ignition ?? false,
         ).name;
 
         final upsertSql =
             '''
           INSERT INTO vehicles (
-            vehicle_id, name, status, last_latitude, last_longitude, last_soc, last_seen_at, ignition
+            vehicle_id, name, status, last_latitude, last_longitude, last_location_at, last_soc, last_soc_at, last_speed, last_speed_at, ignition, last_ignition_at, last_temp, last_temp_at, last_odometer, last_odometer_at, last_seen_at
           ) VALUES (
-            '$vid', '$name', '$status', ${p.latitude}, ${p.longitude}, ${p.batteryLevel}, '$ts', ${p.ignition}
+            '$vid', '$name', '$status', 
+            ${p.latitude ?? 'NULL'}, ${p.longitude ?? 'NULL'}, ${p.latitude != null ? "'$ts'" : 'NULL'},
+            ${p.batteryLevel ?? 'NULL'}, ${p.batteryLevel != null ? "'$ts'" : 'NULL'},
+            ${p.speed ?? 'NULL'}, ${p.speed != null ? "'$ts'" : 'NULL'},
+            ${p.ignition ?? 'NULL'}, ${p.ignition != null ? "'$ts'" : 'NULL'},
+            ${p.batteryTemp ?? 'NULL'}, ${p.batteryTemp != null ? "'$ts'" : 'NULL'},
+            ${p.odometerKm ?? 'NULL'}, ${p.odometerKm != null ? "'$ts'" : 'NULL'},
+            '$ts'
           )
           ON CONFLICT (vehicle_id) DO UPDATE SET
             status = CASE WHEN EXCLUDED.last_seen_at >= vehicles.last_seen_at THEN EXCLUDED.status ELSE vehicles.status END,
-            last_latitude = CASE WHEN EXCLUDED.last_seen_at >= vehicles.last_seen_at THEN EXCLUDED.last_latitude ELSE vehicles.last_latitude END,
-            last_longitude = CASE WHEN EXCLUDED.last_seen_at >= vehicles.last_seen_at THEN EXCLUDED.last_longitude ELSE vehicles.last_longitude END,
-            last_soc = CASE WHEN EXCLUDED.last_seen_at >= vehicles.last_seen_at THEN EXCLUDED.last_soc ELSE vehicles.last_soc END,
-            last_seen_at = CASE WHEN EXCLUDED.last_seen_at >= vehicles.last_seen_at THEN EXCLUDED.last_seen_at ELSE vehicles.last_seen_at END,
-            ignition = CASE WHEN EXCLUDED.last_seen_at >= vehicles.last_seen_at THEN EXCLUDED.ignition ELSE vehicles.ignition END;
+            last_latitude = COALESCE(EXCLUDED.last_latitude, vehicles.last_latitude),
+            last_longitude = COALESCE(EXCLUDED.last_longitude, vehicles.last_longitude),
+            last_location_at = CASE WHEN EXCLUDED.last_latitude IS NOT NULL THEN EXCLUDED.last_location_at ELSE vehicles.last_location_at END,
+            last_soc = COALESCE(EXCLUDED.last_soc, vehicles.last_soc),
+            last_soc_at = CASE WHEN EXCLUDED.last_soc IS NOT NULL THEN EXCLUDED.last_soc_at ELSE vehicles.last_soc_at END,
+            last_speed = COALESCE(EXCLUDED.last_speed, vehicles.last_speed),
+            last_speed_at = CASE WHEN EXCLUDED.last_speed IS NOT NULL THEN EXCLUDED.last_speed_at ELSE vehicles.last_speed_at END,
+            ignition = COALESCE(EXCLUDED.ignition, vehicles.ignition),
+            last_ignition_at = CASE WHEN EXCLUDED.ignition IS NOT NULL THEN EXCLUDED.last_ignition_at ELSE vehicles.last_ignition_at END,
+            last_temp = COALESCE(EXCLUDED.last_temp, vehicles.last_temp),
+            last_temp_at = CASE WHEN EXCLUDED.last_temp IS NOT NULL THEN EXCLUDED.last_temp_at ELSE vehicles.last_temp_at END,
+            last_odometer = COALESCE(EXCLUDED.last_odometer, vehicles.last_odometer),
+            last_odometer_at = CASE WHEN EXCLUDED.last_odometer IS NOT NULL THEN EXCLUDED.last_odometer_at ELSE vehicles.last_odometer_at END,
+            last_seen_at = CASE WHEN EXCLUDED.last_seen_at >= vehicles.last_seen_at THEN EXCLUDED.last_seen_at ELSE vehicles.last_seen_at END;
         ''';
         await dbClient.execute(upsertSql);
       }

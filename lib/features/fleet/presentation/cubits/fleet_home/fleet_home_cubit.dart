@@ -15,6 +15,13 @@ class FleetHomeCubit extends Cubit<FleetHomeState> {
 
   VehicleStatus? _currentFilter;
   String _currentSearchQuery = '';
+  int _currentOffset = 0;
+  final int _pageSize = 50;
+  bool _hasReachedMax = false;
+  bool _isLoadingMore = false;
+
+  bool get hasReachedMax => _hasReachedMax;
+  bool get isLoadingMore => _isLoadingMore;
 
   FleetHomeCubit({
     required this.getFleetSummaryUseCase,
@@ -49,15 +56,21 @@ class FleetHomeCubit extends Cubit<FleetHomeState> {
       _currentSearchQuery = searchQuery;
     }
 
+    _currentOffset = 0;
+    _hasReachedMax = false;
+
     try {
       final summary = await getFleetSummaryUseCase(NoParams());
       final vehicles = await getVehiclesUseCase(
         GetVehiclesParams(
           statusFilter: _currentFilter,
           searchQuery: _currentSearchQuery,
-          limit: 500,
+          limit: _pageSize,
+          offset: _currentOffset,
         ),
       );
+
+      _hasReachedMax = vehicles.length < _pageSize;
 
       emit(
         FleetHomeLoaded(
@@ -69,6 +82,42 @@ class FleetHomeCubit extends Cubit<FleetHomeState> {
       );
     } catch (e) {
       emit(FleetHomeError('Failed to load fleet data: ${e.toString()}'));
+    }
+  }
+
+  Future<void> loadMore() async {
+    if (state is! FleetHomeLoaded || _hasReachedMax || _isLoadingMore) return;
+    
+    _isLoadingMore = true;
+    final currentState = state as FleetHomeLoaded;
+    _currentOffset += _pageSize;
+
+    try {
+      final moreVehicles = await getVehiclesUseCase(
+        GetVehiclesParams(
+          statusFilter: _currentFilter,
+          searchQuery: _currentSearchQuery,
+          limit: _pageSize,
+          offset: _currentOffset,
+        ),
+      );
+
+      _hasReachedMax = moreVehicles.length < _pageSize;
+
+      emit(
+        FleetHomeLoaded(
+          summary: currentState.summary,
+          vehicles: [...currentState.vehicles, ...moreVehicles],
+          selectedFilter: _currentFilter,
+          searchQuery: _currentSearchQuery,
+        ),
+      );
+    } catch (e) {
+      // Revert offset on error
+      _currentOffset -= _pageSize;
+      // You could emit an error state here, but for now we'll just ignore so the list doesn't break
+    } finally {
+      _isLoadingMore = false;
     }
   }
 

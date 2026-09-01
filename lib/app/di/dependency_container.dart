@@ -160,7 +160,7 @@ class DependencyContainer {
     );
 
     final getActiveAlerts = GetActiveAlertsUseCase(alertRepo);
-    final evalAlerts = EvaluateAlertsUseCase(alertRepo);
+    final evalAlerts = EvaluateAlertsUseCase(alertRepo, vehicleRepo);
     final updateAlertStatus = UpdateAlertStatusUseCase(alertRepo);
     final undoAlertDismissal = UndoAlertDismissalUseCase(alertRepo);
 
@@ -168,7 +168,7 @@ class DependencyContainer {
     final updateGeofence = UpdateGeofenceUseCase(geofenceRepo);
     final deactivateGeofence = DeactivateGeofenceUseCase(geofenceRepo);
     final getActiveGeofences = GetActiveGeofencesUseCase(geofenceRepo);
-    final detectTransitions = DetectGeofenceTransitionsUseCase(geofenceRepo);
+    final detectTransitions = DetectGeofenceTransitionsUseCase(geofenceRepo, vehicleRepo);
 
     final processTrips = ProcessTripsUseCase(tripRepo);
     final getVehicleTrips = GetVehicleTripsUseCase(tripRepo);

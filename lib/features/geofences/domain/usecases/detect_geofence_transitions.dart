@@ -3,6 +3,7 @@ import '../../../../core/utils/geo_utils.dart';
 import '../../../fleet/domain/entities/telemetry_packet.dart';
 import '../entities/geofence_event.dart';
 import '../repositories/geofence_repository.dart';
+import '../../../fleet/domain/repositories/vehicle_repository.dart';
 
 class DetectGeofenceTransitionsParams {
   final List<TelemetryPacket> packets;
@@ -18,8 +19,9 @@ class DetectGeofenceTransitionsParams {
 class DetectGeofenceTransitionsUseCase
     implements UseCase<List<GeofenceEvent>, DetectGeofenceTransitionsParams> {
   final GeofenceRepository geofenceRepository;
+  final VehicleRepository vehicleRepository;
 
-  DetectGeofenceTransitionsUseCase(this.geofenceRepository);
+  DetectGeofenceTransitionsUseCase(this.geofenceRepository, this.vehicleRepository);
 
   @override
   Future<List<GeofenceEvent>> call(
@@ -31,10 +33,20 @@ class DetectGeofenceTransitionsUseCase
     final geofences = activeGeofences.where((g) => g.isActive).toList();
     if (geofences.isEmpty) return [];
 
-    // Filter out inaccurate GPS readings (> 50m accuracy) and sort by eventTimestamp ASC
+    // Filter out inaccurate GPS readings or partial updates, and sort by eventTimestamp ASC
     final validPackets =
-        params.packets.where((p) => p.gpsAccuracy <= 50.0).toList()
+        params.packets.where((p) => p.latitude != null && p.longitude != null && (p.gpsAccuracy ?? 100.0) <= 50.0).toList()
           ..sort((a, b) => a.eventTimestamp.compareTo(b.eventTimestamp));
+
+    // Drop out-of-order packets relative to the previously known state
+    final chronologicalPackets = <TelemetryPacket>[];
+    for (final p in validPackets) {
+      final vehicle = await vehicleRepository.getVehicleById(p.vehicleId);
+      if (vehicle != null && vehicle.lastSeenAt.isAfter(p.eventTimestamp)) {
+        continue; // Skip late arriving telemetry for transition detection
+      }
+      chronologicalPackets.add(p);
+    }
 
     final detectedEvents = <GeofenceEvent>[];
     // Tracking state: vehicleId -> geofenceId -> consecutive count state
@@ -46,7 +58,7 @@ class DetectGeofenceTransitionsUseCase
       vehicleInsideState[vid] = Set.from(gSet);
     });
 
-    for (final packet in validPackets) {
+    for (final packet in chronologicalPackets) {
       final insideSet = vehicleInsideState.putIfAbsent(
         packet.vehicleId,
         () => <String>{},
@@ -62,8 +74,8 @@ class DetectGeofenceTransitionsUseCase
 
       for (final geofence in geofences) {
         final distance = GeoUtils.calculateDistanceMeters(
-          packet.latitude,
-          packet.longitude,
+          packet.latitude!,
+          packet.longitude!,
           geofence.centerLat,
           geofence.centerLng,
         );

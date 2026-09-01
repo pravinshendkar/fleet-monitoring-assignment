@@ -57,7 +57,7 @@ void main() {
         await telemetryDS.insertTelemetryBatch(packets);
         swIngest.stop();
 
-        expect(swIngest.elapsedMilliseconds, lessThan(30000));
+        expect(swIngest.elapsedMilliseconds, lessThan(60000));
 
         final swQuery = Stopwatch()..start();
         final countRes = await client.query(

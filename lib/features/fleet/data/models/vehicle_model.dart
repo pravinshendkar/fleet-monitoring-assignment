@@ -5,11 +5,20 @@ class VehicleModel extends Vehicle {
     required super.id,
     required super.name,
     required super.status,
-    required super.lastLatitude,
-    required super.lastLongitude,
-    required super.lastSoc,
+    super.lastLatitude,
+    super.lastLongitude,
+    super.lastLocationAt,
+    super.lastSoc,
+    super.lastSocAt,
+    super.lastSpeed,
+    super.lastSpeedAt,
+    super.ignition,
+    super.lastIgnitionAt,
+    super.lastTemp,
+    super.lastTempAt,
+    super.lastOdometer,
+    super.lastOdometerAt,
     required super.lastSeenAt,
-    required super.ignition,
   });
 
   /// Parses a timestamp value from DuckDB.
@@ -76,14 +85,24 @@ class VehicleModel extends Vehicle {
       id: map['vehicle_id'] as String,
       name: map['name'] as String,
       status: status,
-      lastLatitude: (map['last_latitude'] as num).toDouble(),
-      lastLongitude: (map['last_longitude'] as num).toDouble(),
-      lastSoc: (map['last_soc'] as num).toDouble(),
+      lastLatitude: map['last_latitude'] != null ? (map['last_latitude'] as num).toDouble() : null,
+      lastLongitude: map['last_longitude'] != null ? (map['last_longitude'] as num).toDouble() : null,
+      lastLocationAt: map['last_location_at'] != null ? parseUtcDateTime(map['last_location_at']) : null,
+      lastSoc: map['last_soc'] != null ? (map['last_soc'] as num).toDouble() : null,
+      lastSocAt: map['last_soc_at'] != null ? parseUtcDateTime(map['last_soc_at']) : null,
+      lastSpeed: map['last_speed'] != null ? (map['last_speed'] as num).toDouble() : null,
+      lastSpeedAt: map['last_speed_at'] != null ? parseUtcDateTime(map['last_speed_at']) : null,
+      ignition: map['ignition'] != null
+          ? ((map['ignition'] is bool)
+              ? map['ignition'] as bool
+              : (map['ignition'].toString() == '1' || map['ignition'].toString() == 'true'))
+          : null,
+      lastIgnitionAt: map['last_ignition_at'] != null ? parseUtcDateTime(map['last_ignition_at']) : null,
+      lastTemp: map['last_temp'] != null ? (map['last_temp'] as num).toDouble() : null,
+      lastTempAt: map['last_temp_at'] != null ? parseUtcDateTime(map['last_temp_at']) : null,
+      lastOdometer: map['last_odometer'] != null ? (map['last_odometer'] as num).toDouble() : null,
+      lastOdometerAt: map['last_odometer_at'] != null ? parseUtcDateTime(map['last_odometer_at']) : null,
       lastSeenAt: lastSeen,
-      ignition: (map['ignition'] is bool)
-          ? map['ignition'] as bool
-          : (map['ignition'].toString() == '1' ||
-                map['ignition'].toString() == 'true'),
     );
   }
 
@@ -94,9 +113,18 @@ class VehicleModel extends Vehicle {
       'status': status.name,
       'last_latitude': lastLatitude,
       'last_longitude': lastLongitude,
+      'last_location_at': lastLocationAt?.toUtc().toIso8601String(),
       'last_soc': lastSoc,
-      'last_seen_at': lastSeenAt.toUtc().toIso8601String(),
+      'last_soc_at': lastSocAt?.toUtc().toIso8601String(),
+      'last_speed': lastSpeed,
+      'last_speed_at': lastSpeedAt?.toUtc().toIso8601String(),
       'ignition': ignition,
+      'last_ignition_at': lastIgnitionAt?.toUtc().toIso8601String(),
+      'last_temp': lastTemp,
+      'last_temp_at': lastTempAt?.toUtc().toIso8601String(),
+      'last_odometer': lastOdometer,
+      'last_odometer_at': lastOdometerAt?.toUtc().toIso8601String(),
+      'last_seen_at': lastSeenAt.toUtc().toIso8601String(),
     };
   }
 
@@ -107,9 +135,18 @@ class VehicleModel extends Vehicle {
       status: vehicle.status,
       lastLatitude: vehicle.lastLatitude,
       lastLongitude: vehicle.lastLongitude,
+      lastLocationAt: vehicle.lastLocationAt,
       lastSoc: vehicle.lastSoc,
-      lastSeenAt: vehicle.lastSeenAt,
+      lastSocAt: vehicle.lastSocAt,
+      lastSpeed: vehicle.lastSpeed,
+      lastSpeedAt: vehicle.lastSpeedAt,
       ignition: vehicle.ignition,
+      lastIgnitionAt: vehicle.lastIgnitionAt,
+      lastTemp: vehicle.lastTemp,
+      lastTempAt: vehicle.lastTempAt,
+      lastOdometer: vehicle.lastOdometer,
+      lastOdometerAt: vehicle.lastOdometerAt,
+      lastSeenAt: vehicle.lastSeenAt,
     );
   }
 }

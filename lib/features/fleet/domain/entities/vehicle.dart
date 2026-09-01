@@ -6,21 +6,39 @@ class Vehicle extends Equatable {
   final String id;
   final String name;
   final VehicleStatus status;
-  final double lastLatitude;
-  final double lastLongitude;
-  final double lastSoc;
+  final double? lastLatitude;
+  final double? lastLongitude;
+  final DateTime? lastLocationAt;
+  final double? lastSoc;
+  final DateTime? lastSocAt;
+  final double? lastSpeed;
+  final DateTime? lastSpeedAt;
+  final bool? ignition;
+  final DateTime? lastIgnitionAt;
+  final double? lastTemp;
+  final DateTime? lastTempAt;
+  final double? lastOdometer;
+  final DateTime? lastOdometerAt;
   final DateTime lastSeenAt;
-  final bool ignition;
 
   const Vehicle({
     required this.id,
     required this.name,
     required this.status,
-    required this.lastLatitude,
-    required this.lastLongitude,
-    required this.lastSoc,
+    this.lastLatitude,
+    this.lastLongitude,
+    this.lastLocationAt,
+    this.lastSoc,
+    this.lastSocAt,
+    this.lastSpeed,
+    this.lastSpeedAt,
+    this.ignition,
+    this.lastIgnitionAt,
+    this.lastTemp,
+    this.lastTempAt,
+    this.lastOdometer,
+    this.lastOdometerAt,
     required this.lastSeenAt,
-    required this.ignition,
   });
 
   bool get isStale =>
@@ -57,8 +75,17 @@ class Vehicle extends Equatable {
     status,
     lastLatitude,
     lastLongitude,
+    lastLocationAt,
     lastSoc,
-    lastSeenAt,
+    lastSocAt,
+    lastSpeed,
+    lastSpeedAt,
     ignition,
+    lastIgnitionAt,
+    lastTemp,
+    lastTempAt,
+    lastOdometer,
+    lastOdometerAt,
+    lastSeenAt,
   ];
 }

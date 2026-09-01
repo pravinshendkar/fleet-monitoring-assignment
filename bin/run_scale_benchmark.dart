@@ -6,7 +6,7 @@ import 'package:flutter/foundation.dart';
 
 void main() async {
   debugPrint('====================================================');
-  debugPrint(' Bytebeam Fleet Console - 2,000,000 Row Scale Benchmark');
+  debugPrint(' Fleet Console - 2,000,000 Row Scale Benchmark');
   debugPrint('====================================================');
 
   final tempDbPath =

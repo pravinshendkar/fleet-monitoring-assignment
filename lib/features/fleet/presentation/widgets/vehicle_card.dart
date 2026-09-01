@@ -84,7 +84,9 @@ class VehicleCard extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              '${vehicle.lastSoc.toStringAsFixed(0)}%',
+                              vehicle.lastSoc == null
+                                  ? '—'
+                                  : '${vehicle.lastSoc!.toStringAsFixed(0)}%',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13,
@@ -97,7 +99,7 @@ class VehicleCard extends StatelessWidget {
                         ClipRRect(
                           borderRadius: BorderRadius.circular(4),
                           child: LinearProgressIndicator(
-                            value: (vehicle.lastSoc / 100.0).clamp(0.0, 1.0),
+                            value: ((vehicle.lastSoc ?? 0.0) / 100.0).clamp(0.0, 1.0),
                             backgroundColor: Colors.grey[200],
                             valueColor: AlwaysStoppedAnimation<Color>(
                               _getBatteryColor(vehicle.lastSoc),
@@ -108,7 +110,7 @@ class VehicleCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  if (vehicle.lastSoc <= 20.0) ...[
+                  if (vehicle.lastSoc != null && vehicle.lastSoc! <= 20.0) ...[
                     const SizedBox(width: 12),
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -220,7 +222,8 @@ class VehicleCard extends StatelessWidget {
     );
   }
 
-  Color _getBatteryColor(double soc) {
+  Color _getBatteryColor(double? soc) {
+    if (soc == null) return Colors.grey;
     if (soc <= 10.0) return Colors.red[700]!;
     if (soc <= 20.0) return Colors.amber[800]!;
     if (soc <= 50.0) return Colors.orange[700]!;

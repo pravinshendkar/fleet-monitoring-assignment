@@ -9,6 +9,7 @@ import 'package:fleet_console/features/alerts/domain/usecases/evaluate_alerts.da
 import 'package:fleet_console/features/fleet/data/datasources/telemetry_local_datasource.dart';
 import 'package:fleet_console/features/fleet/data/datasources/vehicle_local_datasource.dart';
 import 'package:fleet_console/features/fleet/data/repositories/telemetry_repository_impl.dart';
+import 'package:fleet_console/features/fleet/data/repositories/vehicle_repository_impl.dart';
 import 'package:fleet_console/features/fleet/domain/entities/vehicle.dart';
 import 'package:fleet_console/features/fleet/domain/usecases/process_telemetry_batch.dart';
 import 'package:fleet_console/features/geofences/data/datasources/geofence_local_datasource.dart';
@@ -75,12 +76,12 @@ void main() {
         }
 
         final lowBatteryCount = packets
-            .where((p) => p.batteryLevel <= 20.0)
+              .where((p) => p.batteryLevel != null && p.batteryLevel! <= 20.0)
             .length;
         expect(lowBatteryCount, greaterThan(0));
 
         final overheatingCount = packets
-            .where((p) => p.batteryTemp > 45.0)
+              .where((p) => p.batteryTemp != null && p.batteryTemp! > 45.0)
             .length;
         expect(overheatingCount, greaterThan(0));
       },
@@ -112,11 +113,16 @@ void main() {
           localDataSource: tripDS,
           eventBus: eventBus,
         );
+        final vehicleRepo = VehicleRepositoryImpl(
+          localDataSource: vehicleDS,
+          eventBus: eventBus,
+        );
 
         // Use cases
-        final evalAlerts = EvaluateAlertsUseCase(alertRepo);
+        final evalAlerts = EvaluateAlertsUseCase(alertRepo, vehicleRepo);
         final detectTransitions = DetectGeofenceTransitionsUseCase(
           geofenceRepo,
+          vehicleRepo,
         );
         final processTrips = ProcessTripsUseCase(tripRepo);
         final createGeofence = CreateGeofenceUseCase(geofenceRepo);

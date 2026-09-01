@@ -5,14 +5,14 @@ class DuckDbTables {
       vehicle_id VARCHAR NOT NULL,
       event_timestamp TIMESTAMP NOT NULL,
       ingest_timestamp TIMESTAMP NOT NULL,
-      latitude DOUBLE NOT NULL,
-      longitude DOUBLE NOT NULL,
-      speed DOUBLE NOT NULL,
-      battery_level DOUBLE NOT NULL,
-      battery_temp DOUBLE NOT NULL,
-      odometer_km DOUBLE NOT NULL,
-      ignition BOOLEAN NOT NULL,
-      gps_accuracy DOUBLE NOT NULL
+      latitude DOUBLE,
+      longitude DOUBLE,
+      speed DOUBLE,
+      battery_level DOUBLE,
+      battery_temp DOUBLE,
+      odometer_km DOUBLE,
+      ignition BOOLEAN,
+      gps_accuracy DOUBLE
     );
   ''';
 
@@ -26,11 +26,20 @@ class DuckDbTables {
       vehicle_id VARCHAR PRIMARY KEY,
       name VARCHAR NOT NULL,
       status VARCHAR NOT NULL,
-      last_latitude DOUBLE NOT NULL,
-      last_longitude DOUBLE NOT NULL,
-      last_soc DOUBLE NOT NULL,
-      last_seen_at TIMESTAMP NOT NULL,
-      ignition BOOLEAN NOT NULL
+      last_latitude DOUBLE,
+      last_longitude DOUBLE,
+      last_location_at TIMESTAMP,
+      last_soc DOUBLE,
+      last_soc_at TIMESTAMP,
+      last_speed DOUBLE,
+      last_speed_at TIMESTAMP,
+      ignition BOOLEAN,
+      last_ignition_at TIMESTAMP,
+      last_temp DOUBLE,
+      last_temp_at TIMESTAMP,
+      last_odometer DOUBLE,
+      last_odometer_at TIMESTAMP,
+      last_seen_at TIMESTAMP NOT NULL
     );
   ''';
 

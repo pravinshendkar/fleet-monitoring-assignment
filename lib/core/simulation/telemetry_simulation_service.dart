@@ -102,11 +102,12 @@ class TelemetrySimulationService {
       final freshPackets = <TelemetryPacket>[];
 
       for (final vehicle in activeVehicles) {
+        // Read latest state to ensure continuity
+        double lat = vehicle.lastLatitude ?? (37.7749 + (_rng.nextDouble() - 0.5) * 0.1);
+        double lng = vehicle.lastLongitude ?? (-122.4194 + (_rng.nextDouble() - 0.5) * 0.1);
+        double soc = vehicle.lastSoc ?? (50.0 + _rng.nextDouble() * 50.0);
         double speed;
         bool ignition;
-        double lat = vehicle.lastLatitude;
-        double lng = vehicle.lastLongitude;
-        double soc = vehicle.lastSoc;
 
         switch (vehicle.status) {
           case VehicleStatus.moving:

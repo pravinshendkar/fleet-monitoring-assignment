@@ -24,16 +24,26 @@ class FleetHomeView extends StatefulWidget {
 
 class _FleetHomeViewState extends State<FleetHomeView> {
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     context.read<FleetHomeCubit>().loadFleetData();
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      context.read<FleetHomeCubit>().loadMore();
+    }
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -316,9 +326,18 @@ class _FleetHomeViewState extends State<FleetHomeView> {
                   }
 
                   return ListView.builder(
-                    itemCount: state.vehicles.length,
+                    controller: _scrollController,
+                    itemCount: state.vehicles.length +
+                        (context.watch<FleetHomeCubit>().isLoadingMore ? 1 : 0),
                     padding: const EdgeInsets.only(top: 8, bottom: 24),
                     itemBuilder: (context, index) {
+                      if (index >= state.vehicles.length) {
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          child: Center(child: CircularProgressIndicator()),
+                        );
+                      }
+
                       final vehicle = state.vehicles[index];
                       return VehicleCard(
                         vehicle: vehicle,

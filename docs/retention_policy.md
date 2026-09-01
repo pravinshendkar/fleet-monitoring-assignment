@@ -1,6 +1,6 @@
 # Telemetry Retention & Compaction Policy
 
-**Project**: Bytebeam Fleet Console ("Fleet Console (Local-First)")  
+**Project**: Fleet Console ("Fleet Console (Local-First)")  
 **Date**: August 25, 2026  
 **Milestone**: Scale Benchmark, Performance Measurement, and Retention Policy  
 
@@ -16,7 +16,7 @@
 
 In a local-first mobile fleet application managing 500 electric vehicles streaming telemetry every 10–15 seconds, raw high-frequency telemetry grows by approximately **3 to 4 million rows per day (~500 MB/day)**. Allowing local storage to grow infinitely on mobile devices would cause storage exhaustion and performance degradation.
 
-This document outlines the **30-Day Rolling Telemetry Retention Policy** designed for the Bytebeam Fleet Console.
+This document outlines the **30-Day Rolling Telemetry Retention Policy** designed for the Fleet Console.
 
 ---
 

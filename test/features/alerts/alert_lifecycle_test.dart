@@ -8,6 +8,8 @@ import 'package:fleet_console/features/alerts/domain/usecases/evaluate_alerts.da
 import 'package:fleet_console/features/alerts/domain/usecases/undo_alert_dismissal.dart';
 import 'package:fleet_console/features/alerts/domain/usecases/update_alert_status.dart';
 import 'package:fleet_console/features/fleet/domain/entities/telemetry_packet.dart';
+import 'package:fleet_console/features/fleet/data/datasources/vehicle_local_datasource.dart';
+import 'package:fleet_console/features/fleet/data/repositories/vehicle_repository_impl.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -36,7 +38,13 @@ void main() {
         eventBus: eventBus,
       );
 
-      evaluateAlerts = EvaluateAlertsUseCase(alertRepo);
+      final vehicleDS = VehicleLocalDataSourceImpl(dbClient: dbClient);
+      final vehicleRepo = VehicleRepositoryImpl(
+        localDataSource: vehicleDS,
+        eventBus: eventBus,
+      );
+
+      evaluateAlerts = EvaluateAlertsUseCase(alertRepo, vehicleRepo);
       updateAlertStatus = UpdateAlertStatusUseCase(alertRepo);
       undoAlertDismissal = UndoAlertDismissalUseCase(alertRepo);
     });

@@ -1,4 +1,6 @@
 import 'package:fleet_console/features/fleet/domain/entities/telemetry_packet.dart';
+import 'package:fleet_console/features/fleet/domain/entities/vehicle.dart';
+import 'package:fleet_console/features/fleet/domain/repositories/vehicle_repository.dart';
 import 'package:fleet_console/features/geofences/domain/entities/geofence.dart';
 import 'package:fleet_console/features/geofences/domain/entities/geofence_event.dart';
 import 'package:fleet_console/features/geofences/domain/repositories/geofence_repository.dart';
@@ -27,6 +29,14 @@ class MockGeofenceRepository implements GeofenceRepository {
   Future<void> updateGeofence(Geofence geofence) async {}
 }
 
+class MockVehicleRepository implements VehicleRepository {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+
+  @override
+  Future<Vehicle?> getVehicleById(String id) async => null;
+}
+
 void main() {
   group('DetectGeofenceTransitionsUseCase Targeted Verification Tests', () {
     late MockGeofenceRepository geofenceRepo;
@@ -50,7 +60,7 @@ void main() {
     setUp(() {
       geofenceRepo = MockGeofenceRepository();
       geofenceRepo.geofencesList = [activeGeofence];
-      useCase = DetectGeofenceTransitionsUseCase(geofenceRepo);
+      useCase = DetectGeofenceTransitionsUseCase(geofenceRepo, MockVehicleRepository());
     });
 
     test(

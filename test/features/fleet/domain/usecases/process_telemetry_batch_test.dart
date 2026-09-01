@@ -8,6 +8,8 @@ import 'package:fleet_console/features/geofences/domain/entities/geofence.dart';
 import 'package:fleet_console/features/geofences/domain/entities/geofence_event.dart';
 import 'package:fleet_console/features/geofences/domain/repositories/geofence_repository.dart';
 import 'package:fleet_console/features/geofences/domain/usecases/detect_geofence_transitions.dart';
+import 'package:fleet_console/features/fleet/domain/entities/vehicle.dart';
+import 'package:fleet_console/features/fleet/domain/repositories/vehicle_repository.dart';
 import 'package:fleet_console/features/trips/domain/entities/trip.dart';
 import 'package:fleet_console/features/trips/domain/repositories/trip_repository.dart';
 import 'package:fleet_console/features/trips/domain/usecases/process_trips.dart';
@@ -93,6 +95,14 @@ class MockTripRepo implements TripRepository {
   }
 }
 
+class MockVehicleRepo implements VehicleRepository {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+
+  @override
+  Future<Vehicle?> getVehicleById(String id) async => null;
+}
+
 void main() {
   group('ProcessTelemetryBatchUseCase Orchestration Tests', () {
     late MockTelemetryRepo telemetryRepo;
@@ -108,8 +118,9 @@ void main() {
       geofenceRepo = MockGeofenceRepo();
       tripRepo = MockTripRepo();
 
-      final evalAlerts = EvaluateAlertsUseCase(alertRepo);
-      final detectTransitions = DetectGeofenceTransitionsUseCase(geofenceRepo);
+      final vehicleRepo = MockVehicleRepo();
+      final evalAlerts = EvaluateAlertsUseCase(alertRepo, vehicleRepo);
+      final detectTransitions = DetectGeofenceTransitionsUseCase(geofenceRepo, vehicleRepo);
       final processTrips = ProcessTripsUseCase(tripRepo);
 
       useCase = ProcessTelemetryBatchUseCase(

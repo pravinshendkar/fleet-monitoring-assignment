@@ -1,6 +1,6 @@
 # Performance & Scale Benchmark Report
 
-**Project**: Bytebeam Fleet Console ("Fleet Console (Local-First)")  
+**Project**: Fleet Console ("Fleet Console (Local-First)")  
 **Date**: August 25, 2026  
 **Milestone**: Scale Benchmark, Performance Measurement, and Retention Policy  
 
